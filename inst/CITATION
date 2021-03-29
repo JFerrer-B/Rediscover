@@ -1,0 +1,30 @@
+bibentry(bibtype = "article",
+  title = "Rediscover: an R package to identify mutually exclusive mutations",
+  author = personList(
+  as.person("Juan A. Ferrer-Bonsoms"),
+  as.person("Laura Jareno"),
+  as.person("Angel Rubio")),
+  journal="{submitted}",
+  volume="xxx",
+  number="xxx",
+  pages="xxx",
+  year=2021,
+  publisher="xxx",
+  textVersion = "Ferrer-Bonsoms Juan A., Jareno Laura, and Rubio Angel 'Rediscover: an R package to identify mutually exclusive mutations.' submitted."
+)
+
+
+bibentry(bibtype = "article",
+  title = "A novel independence test for somatic alterations in cancer shows that biology drives mutual exclusivity but chance explains most co-occurrence",
+  author = personList(
+  as.person("Sander Canisius"),
+  as.person("John W.M. Martens"),
+  as.person("Lodewyk F.A. Wessels")),
+  journal="{Genome biology}",
+  volume="17",
+  number="1",
+  pages="1--17",
+  year=2016,
+  publisher="BioMed Central",
+  textVersion = "Canisius, Sander, John WM Martens, and Lodewyk FA Wessels. 'A novel independence test for somatic alterations in cancer shows that biology drives mutual exclusivity but chance explains most co-occurrence.' Genome biology 17.1 (2016): 1-17."
+)
