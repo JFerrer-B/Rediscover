@@ -14,17 +14,12 @@ Depends:
     R (>= 4.0),
     Matrix,
     speedglm,
-    PoissonBinomial,
-    maftools,
-    data.table,
-    parallel
+    PoissonBinomial
 Imports:
-    Matrix,
-    speedglm,
-    PoissonBinomial,
     maftools,
     data.table,
-    parallel
+    parallel,
+    RColorBrewer
 Suggests:
     knitr,
     rmarkdown,

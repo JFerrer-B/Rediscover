@@ -1,3 +1,4 @@
+#### compres probability matrix} 
 # Create the PMatrix class
 #
 # This is used to represent the probabilities using the DISCOVER
@@ -68,7 +69,7 @@ setMethod("as.matrix", signature(x = "PMatrix"),
 
 setMethod("dim", signature(x = "PMatrix"),
           function (x) { ## select columns
-            c(length(x@rowExps),length(x@colExps))
+            return(c(length(x@rowExps),length(x@colExps)))
           })
 
 # TODO: show only part of the matrix to avoid memory problems.

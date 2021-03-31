@@ -37,6 +37,7 @@
 #' 
 #' @import maftools
 #' @import data.table
+#' @import RColorBrewer
 #' @export
 
 discoversomaticInteractions <- function (maf, top = 25, genes = NULL, pvalue = c(0.05, 0.01), 
