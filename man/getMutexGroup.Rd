@@ -24,7 +24,8 @@ method to estimate mutual exclusive events.
 }
 \examples{
 
-  #This first example is a basic example of how to perform getMutexGroup
+  #This first example is a basic 
+  #example of how to perform getMutexGroup
   
   data("A_example")
   A2 <- A_example[,1:30]
@@ -45,6 +46,5 @@ method to estimate mutual exclusive events.
   getMutexGroup(A, PM, "Coverage")
   getMutexGroup(A, PM, "Exclusivity")
   
-  #Finally, the last example, shows a real example of how to perform this function when using data from TCGA, Colon Adenocarcinoma in this case. 
 
 }

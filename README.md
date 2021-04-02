@@ -1,7 +1,7 @@
-# Rediscover
+# Introduction to Rediscover
 
 
-*Rediscover* is an R package to identify mutually exclusive genomic events. It reimplements a privious R package (*Discover*) whose main contribution is a statistical analysis based on the Poisson-Binomial distribution that takes into account that some samples are more mutated than others. *Rediscover* is much faster than the <a href="https://github.com/NKI-CCB/DISCOVER" target="_blank"> discover </a> implementation.
+We present *Rediscover*, an R package to identify mutually exclusive genomic events. It reimplements a privious R package (*Discover*) whose main contribution is a statistical analysis based on the Poisson-Binomial distribution that takes into account that some samples are more mutated than others. *Rediscover* is much faster than the <a href="https://github.com/NKI-CCB/DISCOVER" target="_blank"> discover </a> implementation.
 
 ## Installation
 Rediscover can be installed from CRAN repository:

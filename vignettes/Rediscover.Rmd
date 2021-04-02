@@ -1,5 +1,5 @@
 ---
-title: "Rediscover"
+title: "Introduction to Rediscover"
 author: "Juan A. Ferrer-Bonsoms & Laura Jareno & Angel Rubio"
 date: "`r BiocStyle::doc_date()`"
 abstract: >
@@ -359,7 +359,6 @@ Therefore, analyzing all these conclusions, it is obtained that, as predicted by
 * Antonio Colaprico, Tiago Chedraoui Silva, Catharina Olsen, Luciano Garofano, Claudia Cava, Davide Garolini, Thais Sabedot, Tathiane
   Malta, Stefano M. Pagnotta, Isabella Castiglioni,Michele Ceccarelli, Gianluca Bontempi Houtan Noushmehr. TCGAbiolinks: An
   R/Bioconductor package for integrative analysis of TCGA data Nucleic Acids Research (05 May 2016) 44 (8): e71.
-  (doi:10.1093/nar/gkv1507)
   
 * Silva, Tiago C., et al. "TCGA Workflow: Analyze cancer genomics and epigenomics data using Bioconductor packages." F1000Research 5
   (2016).

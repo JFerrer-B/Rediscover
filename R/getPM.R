@@ -14,18 +14,22 @@
 #'   data("A_example")
 #'   PMA <- getPM(A_example)
 #'   
-#'   #The next example, is the same as the first one but, using a matrix of class Matrix: 
+#'   #The next example, is the same as the first one but, 
+#'   #using a matrix of class Matrix: 
 #'   
 #'   data("A_Matrix")
 #'   PMA_Matrix <- getPM(A_Matrix)
 #'   
-#'   #Finally, the last example, shows a real example of how to perform this function when when using data from TCGA, Colon Adenocarcinoma in this case: 
+#'   #Finally, the last example, shows a real example 
+#'   #of how to perform this function when when using
+#'   #data from TCGA, Colon Adenocarcinoma in this case: 
 #'   data("TCGA_COAD")
 #'   PM_COAD <- getPM(TCGA_COAD)
 #'
 #'
 #' @import Matrix
-#' @importFrom speedglm control
+#' @importFrom stats coef binomial gaussian dnorm pnorm
+#' @importFrom speedglm control is.sparse
 #' @export
 
 

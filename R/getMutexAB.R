@@ -17,7 +17,8 @@
 #'
 #' @examples 
 #'   
-#'   #This first example is a basic example of how to perform getMutexAB. 
+#'   #This first example is a basic 
+#'   #example of how to perform getMutexAB. 
 #'   
 #'   data("A_example")
 #'   data("B_example")
@@ -25,7 +26,9 @@
 #'   PMB <- getPM(B_example)
 #'   mismutex <- getMutexAB(A=A_example, PM=PMA, B=B_example, PMB = PMB)
 #'   
-#'   #The next example, is the same as the first one but, using a matrix of class Matrix. 
+#'   \dontrun{
+#'   #The next example, is the same as the first
+#'   # one but, using a matrix of class Matrix. 
 #'   
 #'   data("A_Matrix")
 #'   data("B_Matrix")
@@ -33,21 +36,28 @@
 #'   PMB <- getPM(B_Matrix)
 #'   mismutex <- getMutexAB(A=A_Matrix, PM=PMA, B=B_Matrix, PMB = PMB)
 #'   
-#'   #Finally, the last example, shows a real example of how to perform this function when using data from TCGA, Colon Adenocarcinoma in this case. 
+#'   #Finally, the last example, shows a 
+#'   #real example of how to perform this function
+#'   # when using data from TCGA, Colon Adenocarcinoma in this case. 
 #'   
 #'   data("TCGA_COAD_AMP")
 #'   data("AMP_COAD")
 #'   data("PM_TCGA_COAD_AMP")
 #'   data("PM_AMP_COAD")
 #'   
-#'   mismutex <- getMutexAB(A=TCGA_COAD_AMP, PMA=PM_TCGA_COAD_AMP, B=AMP_COAD, PMB = PM_AMP_COAD)
+#'   mismutex <- getMutexAB(A=TCGA_COAD_AMP, 
+#'                          PMA=PM_TCGA_COAD_AMP,
+#'                          B=AMP_COAD,
+#'                          PMB = PM_AMP_COAD)
+#'  }
 #'
 #' @import Matrix
+#' @importFrom stats dnorm
 #' @importFrom speedglm control
 #' @importFrom PoissonBinomial ppbinom
 #' @export
 
-getMutexAB <- function(A, PMA = getPMA(A), B, PMB = getPM(B), lower.tail = TRUE, 
+getMutexAB <- function(A, PMA = getPM(A), B, PMB = getPM(B), lower.tail = TRUE, 
                      mixed = FALSE,
                      th = 1e-2, verbose = FALSE, parallel = FALSE){
   

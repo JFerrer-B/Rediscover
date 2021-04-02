@@ -38,23 +38,29 @@ method to estimate mutual exclusive events.
 }
 \examples{
 
-  #This first example is a basic example of how to perform getMutex. 
+  #This first example is a basic 
+  #example of how to perform getMutex. 
   
   data("A_example")
   PMA <- getPM(A_example)
   mismutex <- getMutex(A=A_example,PM=PMA)
   
-  #The next example, is the same as the first one but, using a matrix of class Matrix. 
+  \dontrun{
+  #The next example, is the same as the first one but,
+  # using a matrix of class Matrix. 
   
   data("A_Matrix")
   PMA_Matrix <- getPM(A_Matrix)
   mismutex <- getMutex(A=A_Matrix,PM=PMA_Matrix)
   
-  #Finally, the last example, shows a real example of how to perform this function when using data from TCGA, Colon Adenocarcinoma in this case. 
+  #Finally, the last example, shows a real 
+  #example of how to perform this function when using 
+  #data from TCGA, Colon Adenocarcinoma in this case. 
   
   data("TCGA_COAD")
   data("PM_COAD")
   
   PM_COAD <- getMutex(TCGA_COAD, PM_COAD)
+  }
 
 }

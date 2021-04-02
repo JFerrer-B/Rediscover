@@ -1,13 +1,13 @@
 Package: Rediscover
 Type: Package
-Title: Rediscover
+Title: Identify Mutually Exclusive Mutations
 Version: 0.1.0
 Authors@R: c(person("Juan A. Ferrer-Bonsoms", "Developer", role = c("aut", "cre"),
                      email = "jafhernandez@tecnun.es"),
               person("Laura Jareno", "Developer", role = "aut"),
               person("Angel Rubio", "User", role = c("aut","ctb"),
                      email = "arubio@tecnun.es"))
-Description: Rediscover is developed to identify mutually exclusive genomic events. 
+Description: An optimized method for identifying mutually exclusive genomic events. 
     Its main contribution is a statistical analysis based on the Poisson-Binomial 
     distribution that takes into account that some samples are more mutated than others.
 Depends:
@@ -19,7 +19,8 @@ Imports:
     maftools,
     data.table,
     parallel,
-    RColorBrewer
+    RColorBrewer,
+    methods
 Suggests:
     knitr,
     rmarkdown,
@@ -29,7 +30,8 @@ Suggests:
     dplyr,
     kableExtra,
     TCGAbiolinks,
-    magick
+    magick,
+    stats
 License: Artistic-2.0
 LazyData: true
 RoxygenNote: 7.1.1

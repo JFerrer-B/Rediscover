@@ -71,13 +71,17 @@ discoversomaticInteractions(
 
 \item{limitColorBreaks}{limit color to extreme values. Default TRUE}
 }
+\value{
+A list of data.tables and it will print a heatmap with the results.
+}
 \description{
 Function adapted to maftools where given a .maf file, it graphs the somatic interactions between a group of genes, i.e., the combination of gene expression and mutation data to detect mutually exclusive or co-ocurring events.
 }
 \examples{
-\dontrun{
+\donttest{
 
-  #An example of how to perform the function, using data from TCGA, Colon Adenocarcinoma in this case. 
+  #An example of how to perform the function,
+  #using data from TCGA, Colon Adenocarcinoma in this case. 
   
   coad.maf <- GDCquery_Maf("COAD", pipelines = "muse") \%>\% read.maf
   discoversomaticInteractions(maf = coad.maf, top = 35, pvalue = c(1e-2, 2e-3))

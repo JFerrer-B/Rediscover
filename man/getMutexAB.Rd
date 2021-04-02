@@ -6,7 +6,7 @@
 \usage{
 getMutexAB(
   A,
-  PMA = getPMA(A),
+  PMA = getPM(A),
   B,
   PMB = getPM(B),
   lower.tail = TRUE,
@@ -44,7 +44,8 @@ method to estimate mutual exclusive events between A and B
 }
 \examples{
   
-  #This first example is a basic example of how to perform getMutexAB. 
+  #This first example is a basic 
+  #example of how to perform getMutexAB. 
   
   data("A_example")
   data("B_example")
@@ -52,7 +53,9 @@ method to estimate mutual exclusive events between A and B
   PMB <- getPM(B_example)
   mismutex <- getMutexAB(A=A_example, PM=PMA, B=B_example, PMB = PMB)
   
-  #The next example, is the same as the first one but, using a matrix of class Matrix. 
+  \dontrun{
+  #The next example, is the same as the first
+  # one but, using a matrix of class Matrix. 
   
   data("A_Matrix")
   data("B_Matrix")
@@ -60,13 +63,19 @@ method to estimate mutual exclusive events between A and B
   PMB <- getPM(B_Matrix)
   mismutex <- getMutexAB(A=A_Matrix, PM=PMA, B=B_Matrix, PMB = PMB)
   
-  #Finally, the last example, shows a real example of how to perform this function when using data from TCGA, Colon Adenocarcinoma in this case. 
+  #Finally, the last example, shows a 
+  #real example of how to perform this function
+  # when using data from TCGA, Colon Adenocarcinoma in this case. 
   
   data("TCGA_COAD_AMP")
   data("AMP_COAD")
   data("PM_TCGA_COAD_AMP")
   data("PM_AMP_COAD")
   
-  mismutex <- getMutexAB(A=TCGA_COAD_AMP, PMA=PM_TCGA_COAD_AMP, B=AMP_COAD, PMB = PM_AMP_COAD)
+  mismutex <- getMutexAB(A=TCGA_COAD_AMP, 
+                         PMA=PM_TCGA_COAD_AMP,
+                         B=AMP_COAD,
+                         PMB = PM_AMP_COAD)
+ }
 
 }

@@ -26,18 +26,23 @@
 #' 
 #' 
 #' @examples 
-#' \dontrun{
+#' \donttest{
 #' 
-#'   #An example of how to perform the function, using data from TCGA, Colon Adenocarcinoma in this case. 
+#'   #An example of how to perform the function,
+#'   #using data from TCGA, Colon Adenocarcinoma in this case. 
 #'   
 #'   coad.maf <- GDCquery_Maf("COAD", pipelines = "muse") %>% read.maf
 #'   discoversomaticInteractions(maf = coad.maf, top = 35, pvalue = c(1e-2, 2e-3))
 #' 
 #' }
 #' 
+#' @return A list of data.tables and it will print a heatmap with the results.
+#' 
 #' @import maftools
 #' @import data.table
 #' @import RColorBrewer
+#' @import methods
+#' @importFrom utils getFromNamespace
 #' @export
 
 discoversomaticInteractions <- function (maf, top = 25, genes = NULL, pvalue = c(0.05, 0.01), 
@@ -46,6 +51,27 @@ discoversomaticInteractions <- function (maf, top = 25, genes = NULL, pvalue = c
           countsFontSize = 0.8, countsFontColor = "black", colPal = "BrBG", 
           showSum = TRUE, colNC = 9, nShiftSymbols = 5, sigSymbolsSize = 2, 
           sigSymbolsFontSize = 0.9, pvSymbols = c(46, 42), limitColorBreaks = TRUE){
+  
+  
+  Hugo_Symbol <- NULL
+  Tumor_Sample_Barcode <- NULL
+  gene1 <- NULL
+  gene2 <- NULL
+  `.` <- NULL
+  event_ratio <- NULL
+  `01` <- NULL
+  `10` <- NULL
+  `11` <- NULL
+  pValue <- NULL
+  pair <- NULL
+  AlteredSamples <- NULL
+  par <- NULL
+  abline <- NULL
+  mtext <- NULL
+  Event <- NULL
+  text <- NULL
+  points <- NULL
+  axis <- NULL
   
   if(is.null(maf)){
     stop("not input maf file")
@@ -59,7 +85,9 @@ discoversomaticInteractions <- function (maf, top = 25, genes = NULL, pvalue = c
     stop("Minimum two genes required!")
   }
 
-  om = maftools:::createOncoMatrix(m = maf, g = genes)
+  # om = maftools:::createOncoMatrix(m = maf, g = genes)
+  createOncoMatrix_2 <- getFromNamespace("createOncoMatrix","maftools")
+  om = createOncoMatrix_2(m = maf, g = genes)
   all.tsbs = levels(getSampleSummary(x = maf)[, Tumor_Sample_Barcode])
   mutMat = t(om$numericMatrix)
   missing.tsbs = all.tsbs[!all.tsbs %in% rownames(mutMat)]
