@@ -38,6 +38,10 @@
 #' 
 #' @return A list of data.tables and it will print a heatmap with the results.
 #' 
+#' @references Mayakonda A, Lin DC, Assenov Y, Plass C, Koeffler HP. 2018. Maftools:
+#'    efficient and comprehensive analysis of somatic variants in cancer.
+#'    Genome Research. http://dx.doi.org/10.1101/gr.239244.118
+#' 
 #' @import maftools
 #' @import data.table
 #' @import RColorBrewer
@@ -52,6 +56,9 @@ discoversomaticInteractions <- function (maf, top = 25, genes = NULL, pvalue = c
           showSum = TRUE, colNC = 9, nShiftSymbols = 5, sigSymbolsSize = 2, 
           sigSymbolsFontSize = 0.9, pvSymbols = c(46, 42), limitColorBreaks = TRUE){
   
+  
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
   
   Hugo_Symbol <- NULL
   Tumor_Sample_Barcode <- NULL

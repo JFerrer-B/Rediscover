@@ -10,7 +10,10 @@ getPM(A)
 \item{A}{The binary matrix}
 }
 \value{
-A PMatrix object with the corresponding probability estimates
+A `PMatrix` object with the corresponding probability estimations.
+This `PMatrix` object stored the corresponding coefficients of the 
+logistic regression computed. With this coefficients it is possible to build
+the complete matrix of probabilities.
 }
 \description{
 Given a binary matrix estimates the corresponding probability  matrix pij.

@@ -45,7 +45,7 @@ method to estimate mutual exclusive events.
   PMA <- getPM(A_example)
   mismutex <- getMutex(A=A_example,PM=PMA)
   
-  \dontrun{
+  \donttest{
   #The next example, is the same as the first one but,
   # using a matrix of class Matrix. 
   

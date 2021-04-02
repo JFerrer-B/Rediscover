@@ -89,3 +89,8 @@ Function adapted to maftools where given a .maf file, it graphs the somatic inte
 }
 
 }
+\references{
+Mayakonda A, Lin DC, Assenov Y, Plass C, Koeffler HP. 2018. Maftools:
+   efficient and comprehensive analysis of somatic variants in cancer.
+   Genome Research. http://dx.doi.org/10.1101/gr.239244.118
+}

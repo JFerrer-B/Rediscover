@@ -53,7 +53,7 @@ method to estimate mutual exclusive events between A and B
   PMB <- getPM(B_example)
   mismutex <- getMutexAB(A=A_example, PM=PMA, B=B_example, PMB = PMB)
   
-  \dontrun{
+  \donttest{
   #The next example, is the same as the first
   # one but, using a matrix of class Matrix. 
   

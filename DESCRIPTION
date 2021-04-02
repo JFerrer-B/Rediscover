@@ -7,9 +7,18 @@ Authors@R: c(person("Juan A. Ferrer-Bonsoms", "Developer", role = c("aut", "cre"
               person("Laura Jareno", "Developer", role = "aut"),
               person("Angel Rubio", "User", role = c("aut","ctb"),
                      email = "arubio@tecnun.es"))
-Description: An optimized method for identifying mutually exclusive genomic events. 
-    Its main contribution is a statistical analysis based on the Poisson-Binomial 
-    distribution that takes into account that some samples are more mutated than others.
+Description: An optimized method for identifying mutually 
+    exclusive genomic events.  Its main contribution is a
+    statistical analysis based on the Poisson-Binomial 
+    distribution that takes into account that some samples
+    are more mutated than others. See [Canisius, Sander, John WM Martens,
+    and  Lodewyk FA Wessels. (2016)  "A novel independence test for
+    somatic alterations in cancer shows that 
+    biology drives mutual exclusivitybut chance explains
+    most co-occurrence." Genome biology 17.1 : 1-17. <doi:10.1186/s13059-016-1114-x>].
+    The mutations matrices are sparce matrices. The method developed takes 
+    advantage of the advantages of this type of matrix to save 
+    time and computing resources.
 Depends:
     R (>= 4.0),
     Matrix,

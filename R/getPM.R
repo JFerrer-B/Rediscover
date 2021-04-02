@@ -4,7 +4,10 @@
 #'
 #' @param A The binary matrix
 #'
-#' @return A PMatrix object with the corresponding probability estimates
+#' @return A `PMatrix` object with the corresponding probability estimations.
+#' This `PMatrix` object stored the corresponding coefficients of the 
+#' logistic regression computed. With this coefficients it is possible to build
+#' the complete matrix of probabilities.
 #'
 #' @examples 
 #' 
