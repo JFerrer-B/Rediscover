@@ -16,7 +16,7 @@ Description: An optimized method for identifying mutually
     somatic alterations in cancer shows that 
     biology drives mutual exclusivity but chance explains
     most co-occurrence." Genome biology 17.1 : 1-17. <doi:10.1186/s13059-016-1114-x>].
-    The mutations matrices are sparce matrices. The method developed takes 
+    The mutations matrices are sparse matrices. The method developed takes 
     advantage of the advantages of this type of matrix to save 
     time and computing resources.
 Depends:
