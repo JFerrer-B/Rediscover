@@ -75,6 +75,7 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
   sqrtVarEst <- sqrt(varEst) # expected standard deviations
   
   kk1 <- (Mevents + 0.5 - MeanEst)/sqrtVarEst
+  rm(Mevents)
   kk1 <- as(kk1, "dspMatrix")
   ind = gammEst/(6 * sqrtVarEst^3)
   ind <- as(ind, "dspMatrix")
