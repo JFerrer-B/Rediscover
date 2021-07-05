@@ -47,9 +47,17 @@
 #' @importFrom PoissonBinomial ppbinom
 #' @export
 
-getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE, 
-                     mixed = FALSE,
-                     th = 1e-2, verbose = FALSE, parallel = FALSE){
+getMutexNV_Meff <- function(A = NULL, PM = getPM(A), lower.tail = TRUE, 
+                            method = "ShiftedBinomial", mixed = FALSE,
+                            th = 5e-2, verbose = FALSE, parallel = FALSE){
+  
+  # We have to think about the parameters. My suggestion is:
+  # Method to compute the p.values 
+  # method = c("Exact", "RefinedNormal", "Binomial", "ShiftedBinomial")
+  # Should the p.values be refined?
+  # mixed = T
+  # Threshold to compute exact p.values (p.values below the threshold are exact)
+  # th = 0.05
   
   if(verbose){
     message("checking inputs...")
@@ -74,67 +82,120 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
     message("Building model...")
   }
   Mevents <- Matrix(A)
-  Mevents <- tcrossprod(Mevents) 
+  Mevents <- as.matrix(tcrossprod(Mevents) )
   PM <- as.matrix(PM)
-  MeanEst <- tcrossprod(PM) # expected means
-  varEst <- MeanEst - tcrossprod(PM*PM) # expected variance
-  gammEst <- varEst - 2*(MeanEst-varEst) + 2*tcrossprod(PM * PM * PM) # 3rd order correction
-  sqrtVarEst <- sqrt(varEst) # expected standard deviations
   
-  kk1 <- (Mevents + 0.5 - MeanEst)/sqrtVarEst
-  kk1 <- as(kk1, "dspMatrix")
-  ind = gammEst/(6 * sqrtVarEst^3)
-  ind <- as(ind, "dspMatrix")
-  
-  pvals <- kk1
-  if (lower.tail) {
-    ppp <- pnorm(kk1@x, lower.tail = TRUE) + ind@x * (1-(kk1@x)^2)*dnorm(kk1@x)
-  } else {
-    ppp <- pnorm(kk1@x, lower.tail = FALSE) - ind@x * (1-(kk1@x)^2)*dnorm(kk1@x)
+  if (method == "ShiftedBinomial") {
+    l1 <- tcrossprod(PM) # expected means
+    l2 <- tcrossprod(PM*PM)
+    l3 <- tcrossprod(PM * PM * PM)
+    
+    pstar <- (l2-l3)/(l1-l2)
+    nstar <- (l1 -l2)/(pstar*(1-pstar))
+    sstar <- l1 - nstar*pstar
+    rm(l1);rm(l2);rm(l3)
+    
+    # TODO: since the matrix is symmetric and takes a lot of time, use lower.tri
+    # to compute only half of the values. Check the RefinedNormal code.
+    II <- lower.tri(pstar, diag = T)
+    ppp <- pbeta(pstar[II], pmax(Mevents[II]+1-sstar[II],0),pmax(nstar[II]-Mevents[II]+sstar[II],0), lower.tail = !lower.tail)
+    
+    # Previous line equivalent to the following (round needed for pbinom) -symmetric trick not used
+    # n <- round(nstar)
+    # s <- round(sstar)
+    # p <- ((nstar * pstar) + (sstar-s))/n
+    # ppp <- pbinom(Mevents - s, n,p, lower.tail = lower.tail)
+    pvals <- pstar
+    pvals[II] <- ppp
+    pvals <- as(forceSymmetric(pvals, "L"),"dspMatrix")
   }
-  ppp[ppp < 0] <- 0
-  ppp[ppp > 1] <- 1
-  
-  pvals@x <- ppp
-  pvals <- as.matrix(pvals)
+  if (method == "Binomial") {
+    l1 <- tcrossprod(PM)
+    l2 <- tcrossprod(PM*PM)
+    
+    p <- l2/l1
+    n <- l1 / p
+    
+    II <- lower.tri(p, diag = T)
+    
+    ppp <- pbeta(p[II], Mevents[II]+1,pmax(n[II]-Mevents[II],0), lower.tail = !lower.tail)
+    
+    # Previous line equivalent to the following (round needed for pbinom)
+    # n <- round(n)
+    # p <- A/n
+    # ppp <- pbinom(Mevents, n,p, lower.tail = lower.tail)
+    
+    pvals <- p
+    pvals[II] <- ppp
+    pvals <- as(forceSymmetric(pvals, "L"),"dspMatrix")
+  }
+  if (method == "RefinedNormal") {
+    MeanEst <- tcrossprod(PM) # expected means
+    varEst <- MeanEst - tcrossprod(PM*PM) # expected variance
+    gammEst <- varEst - 2*(MeanEst-varEst) + 2*tcrossprod(PM * PM * PM) # 3rd order correction
+    sqrtVarEst <- sqrt(varEst) # expected standard deviations
+    
+    kk1 <- (Mevents + 0.5 - MeanEst)/sqrtVarEst
+    kk1 <- as(kk1, "dspMatrix")
+    ind <- gammEst/(6 * sqrtVarEst^3)
+    ind <- as(ind, "dspMatrix")
+    
+    pvals <- kk1
+    if (lower.tail) {
+      ppp <- pnorm(kk1@x, lower.tail = TRUE) + ind@x * (1-(kk1@x)^2)*dnorm(kk1@x)
+    } else {
+      ppp <- pnorm(kk1@x, lower.tail = FALSE) - ind@x * (1-(kk1@x)^2)*dnorm(kk1@x)
+    }
+    ppp[ppp < 0] <- 0
+    ppp[ppp > 1] <- 1
+    
+    pvals@x <- ppp
+  }
+  if (method == "Exact"){
+    pvals <- matrix(0, nrow = nrow(A), ncol=nrow(A))
+    mixed <- T
+    th <- 1.01 # Just to be sure :)
+    
+  }
   if (mixed) {
     if(verbose){
-      message("Performing exact method...")
+      message("Improving low p.values with exact method...")
     }
-      # Mixed method: use approximation and, if the p.value is small, compute the exact p.value
-      II <- which(pvals < th, arr.ind = TRUE)
-      II <- II[II[,2] > II[,1],,drop=F] # Remove half of them
-      if (nrow(II) > 0){
-        if(parallel) {
-          no_cores <- detectCores(logical = FALSE) - 1
-          cl <- makeCluster(no_cores)
-          if(verbose){
-            message("Creating cluster...")
-          }
-          clusterExport(cl, c("ppbinom"))
-          pair <- 1:nrow(II)
-          pvalue <- parSapply(cl, pair, function (pair, II, PM, A) {
-            genei <- II[pair,1]
-            genej <- II[pair,2]
-            pp <- PM[genei,] * PM[genej,]
-            pvalue <- ppbinom(sum(A[genei,]*A[genej,]), pp, method = "DivideFFT", lower.tail = lower.tail)
-          }, II, PM, A)
-          pvals[II] <- pvalue
-          pvals[II[,c(2,1)]] <- pvalue # To keep symmetry
-          
-          stopCluster(cl)
-        } else {
-          pair <- 1:nrow(II)
-          pvalue <- sapply(pair, function (pair, II, PM, A) {
-            genei <- II[pair,1]
-            genej <- II[pair,2]
-            pp <- PM[genei,] * PM[genej,]
-            pvalue <- ppbinom(sum(A[genei,]*A[genej,]), pp, method = "DivideFFT", lower.tail = lower.tail)
-          }, II, PM, A)
-          pvals[II] <- pvalue
-          pvals[II[,c(2,1),drop=F]] <- pvalue # To keep symmetry
+    # Mixed method: use approximation and, if the p.value is small, compute the exact p.value
+    II <- which(pvals < th, arr.ind = TRUE)
+    II <- II[II[,2] > II[,1],,drop=F] # Remove half of them
+    if (nrow(II) > 0){
+      if(parallel) {
+        no_cores <- detectCores(logical = FALSE) - 1
+        cl <- makeCluster(no_cores)
+        if(verbose){
+          message("Creating cluster...")
         }
+        clusterExport(cl, c("ppbinom"))
+        pair <- 1:nrow(II)
+        pvalue <- parSapply(cl, pair, function (pair, II, PM) {
+          genei <- II[pair,1]
+          genej <- II[pair,2]
+          pp <- PM[genei,] * PM[genej,]
+          pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
+        }, II, PM,Mevents)
+        pvals[II] <- pvalue
+        pvals[II[,c(2,1)]] <- pvalue # To keep symmetry
+        
+        stopCluster(cl)
+      } else {
+        pair <- 1:nrow(II)
+        pvalue <- sapply(pair, function (pair, II, PM, Mevents) {
+          genei <- II[pair,1]
+          genej <- II[pair,2]
+          pp <- PM[genei,] * PM[genej,]
+          pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
+        }, II, PM,Mevents)
+        pvals[II] <- pvalue
+        pvals[II[,c(2,1),drop=F]] <- pvalue # To keep symmetry
       }
+    }
+    pvals <- as(pvals, "dspMatrix")
   }
   if(verbose){
     message("Building output...")
