@@ -67,18 +67,28 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
     message("Building model...")
   }
   Mevents <- Matrix(A)
+  if(mixed == FALSE){
+    rm(A)
+    gc()
+  }
   Mevents <- tcrossprod(Mevents) 
   PM <- as.matrix(PM)
   MeanEst <- tcrossprod(PM) # expected means
   varEst <- MeanEst - tcrossprod(PM*PM) # expected variance
   gammEst <- varEst - 2*(MeanEst-varEst) + 2*tcrossprod(PM * PM * PM) # 3rd order correction
   sqrtVarEst <- sqrt(varEst) # expected standard deviations
+  rm(varEst)
+  gc()
   
   kk1 <- (Mevents + 0.5 - MeanEst)/sqrtVarEst
-  rm(Mevents)
+  rm(Mevents,MeanEst)
+  gc()
+  
   kk1 <- as(kk1, "dspMatrix")
   ind = gammEst/(6 * sqrtVarEst^3)
   ind <- as(ind, "dspMatrix")
+  rm(gammEst,sqrtVarEst)
+  gc()
   
   pvals <- kk1
   if (lower.tail) {
