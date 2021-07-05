@@ -72,9 +72,11 @@ getPM <- function(A){
                      j = as.numeric(cSums),
                      x =1)
 
-  A1 <- rM %*% (A %*% cM) 
-  #A0 <- rM %*% (1-A) %*% cM 
-  # A0 <- rM %*% (1-A) %*% cM -A1 
+  if (prod(dim(rM))*nrow(A) + nrow(rM) * prod(dim(cM)) < prod(dim(rM))*ncol(cM) + prod(dim(A)) * ncol(cM))
+    A1 <- rM %*% (A %*% cM)
+  else
+    A1 <- (rM %*% A) %*% cM
+  
   a <- rowSums(rM)
   b <- colSums(cM)
   A0 <- matrix(a,,1) %*% matrix(b,1) - A1
