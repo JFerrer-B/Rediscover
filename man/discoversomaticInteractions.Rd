@@ -9,6 +9,8 @@ discoversomaticInteractions(
   top = 25,
   genes = NULL,
   pvalue = c(0.05, 0.01),
+  getMutexMethod = "ShiftedBinomial",
+  getMutexMixed = TRUE,
   returnAll = TRUE,
   geneOrder = NULL,
   fontSize = 0.8,
@@ -36,6 +38,10 @@ discoversomaticInteractions(
 \item{genes}{List of genes among which interactions should be tested. If not provided, test will be performed between top 25 genes.}
 
 \item{pvalue}{Default c(0.05, 0.01) p-value threshold. You can provide two values for upper and lower threshold.}
+
+\item{getMutexMethod}{Method for the `getMutex` function (by default "ShiftedBinomial")}
+
+\item{getMutexMixed}{Mixed parameter for the `getMutex` function (by default TRUE)}
 
 \item{returnAll}{If TRUE returns test statistics for all pair of tested genes. Default FALSE, returns for only genes below pvalue threshold.}
 
@@ -71,11 +77,14 @@ discoversomaticInteractions(
 
 \item{limitColorBreaks}{limit color to extreme values. Default TRUE}
 }
-\value{
-A list of data.tables and it will print a heatmap with the results.
-}
 \description{
 Function adapted to maftools where given a .maf file, it graphs the somatic interactions between a group of genes, i.e., the combination of gene expression and mutation data to detect mutually exclusive or co-ocurring events.
+}
+\details{
+Internally, this function run the getMutex function. With the 'getMutexMethod' parameter user might select
+the 'method' parameter of the getMutex function. For more details run '?getMutex'
+
+#' @return A list of data.tables and it will print a heatmap with the results.
 }
 \examples{
 \donttest{
@@ -87,6 +96,7 @@ Function adapted to maftools where given a .maf file, it graphs the somatic inte
   discoversomaticInteractions(maf = coad.maf, top = 35, pvalue = c(1e-2, 2e-3))
 
 }
+
 
 }
 \references{

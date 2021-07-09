@@ -8,10 +8,12 @@ getMutex(
   A = NULL,
   PM = getPM(A),
   lower.tail = TRUE,
-  mixed = FALSE,
-  th = 0.01,
+  method = "ShiftedBinomial",
+  mixed = TRUE,
+  th = 0.05,
   verbose = FALSE,
-  parallel = FALSE
+  parallel = FALSE,
+  no_cores = NULL
 )
 }
 \arguments{
@@ -21,20 +23,36 @@ getMutex(
 
 \item{lower.tail}{True if mutually exclusive test. False for co-ocurrence. By default is TRUE.}
 
-\item{mixed}{option to compute lower p.values with an exact method. By default TRUE}
+\item{method}{one of the following: "ShiftedBinomial" (default),"Exact", "Binomial", and "RefinedNormal".}
+
+\item{mixed}{option to compute lower p-values with an exact method. By default TRUE}
 
 \item{th}{upper threshold of p.value to apply the exact method.}
 
 \item{verbose}{The verbosity of the output}
 
 \item{parallel}{If the exact method is executed with a parallel process.}
+
+\item{no_cores}{number of cores. If not stated number of cores of the CPU - 1}
 }
 \value{
-A symmetric matrix with the p.value of the corresponding test.
+A symmetric matrix with the p-values of the corresponding test.
 }
 \description{
 Given a binary matrix and its corresponding probability matrix pij, compute the Poisson Binomial
 method to estimate mutual exclusive events.
+}
+\details{
+we  implemented three different approximations of the Poison-Binomial distribution function:
+\itemize{
+ \item "ShiftedBinomial" (by default) that correspond to a shifted Binomial with three parameters (Peköz, Shwartz, Christiansen, & Berlowitz, 2010).
+ \item"Exact" that use the exact formula using the `PoissonBinomial` Rpackage based on the work from (Biscarri, Zhao, & Brunner, 2018).
+ \item"Binomial" with two parameters (Cam, 1960).
+ \item"RefinedNormal" that is based on the work from  (Volkova, 1996).
+}
+ If `mixed` option is selected (by default is FALSE), the "Exact" method is computed for p-values lower than a threshold
+  (`th` parameter, that by default is 0.05). When the exact method is computed, it is possible to parallelize the process by
+  selecting the option `parallel` (by default FALSE) and setting the number of cores (`no_cores` parameter)
 }
 \examples{
 

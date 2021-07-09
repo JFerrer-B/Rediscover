@@ -6,12 +6,25 @@
 #' @param A The binary matrix
 #' @param PM The corresponding probability matrix of A. It can be computed using function getPM. By default equal to getPM(A)
 #' @param lower.tail True if mutually exclusive test. False for co-ocurrence. By default is TRUE.
-#' @param mixed option to compute lower p.values with an exact method. By default TRUE
+#' @param method one of the following: "ShiftedBinomial" (default),"Exact", "Binomial", and "RefinedNormal".
+#' @param mixed option to compute lower p-values with an exact method. By default TRUE
 #' @param th upper threshold of p.value to apply the exact method.
 #' @param verbose The verbosity of the output
 #' @param parallel If the exact method is executed with a parallel process.
+#' @param no_cores number of cores. If not stated number of cores of the CPU - 1
+#' 
+#' @details we  implemented three different approximations of the Poison-Binomial distribution function:
+#' \itemize{
+#'  \item "ShiftedBinomial" (by default) that correspond to a shifted Binomial with three parameters (Peköz, Shwartz, Christiansen, & Berlowitz, 2010).
+#'  \item"Exact" that use the exact formula using the `PoissonBinomial` Rpackage based on the work from (Biscarri, Zhao, & Brunner, 2018).
+#'  \item"Binomial" with two parameters (Cam, 1960).
+#'  \item"RefinedNormal" that is based on the work from  (Volkova, 1996).
+#' }
+#'  If `mixed` option is selected (by default is FALSE), the "Exact" method is computed for p-values lower than a threshold
+#'   (`th` parameter, that by default is 0.05). When the exact method is computed, it is possible to parallelize the process by
+#'   selecting the option `parallel` (by default FALSE) and setting the number of cores (`no_cores` parameter)
 #'
-#' @return A symmetric matrix with the p.value of the corresponding test.
+#' @return A symmetric matrix with the p-values of the corresponding test.
 #'
 #' @examples 
 #' 
@@ -42,22 +55,16 @@
 #'
 #' @import Matrix
 #' @import parallel
-#' @importFrom stats pnorm dnorm
+#' @importFrom stats pnorm dnorm pbeta
 #' @importFrom speedglm control
 #' @importFrom PoissonBinomial ppbinom
 #' @export
 
-getMutexNV_Meff <- function(A = NULL, PM = getPM(A), lower.tail = TRUE, 
-                            method = "ShiftedBinomial", mixed = FALSE,
-                            th = 5e-2, verbose = FALSE, parallel = FALSE){
+getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE, 
+                            method = "ShiftedBinomial", mixed = TRUE,
+                            th = 5e-2, verbose = FALSE, parallel = FALSE,no_cores=NULL){
   
-  # We have to think about the parameters. My suggestion is:
-  # Method to compute the p.values 
-  # method = c("Exact", "RefinedNormal", "Binomial", "ShiftedBinomial")
-  # Should the p.values be refined?
-  # mixed = T
-  # Threshold to compute exact p.values (p.values below the threshold are exact)
-  # th = 0.05
+
   
   if(verbose){
     message("checking inputs...")
@@ -76,6 +83,10 @@ getMutexNV_Meff <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
   
   if(max(A)>1){
     stop("input A must be binary")
+  }
+  
+  if(!method %in% c("Exact", "RefinedNormal", "Binomial", "ShiftedBinomial")){
+    stop('method must be "Exact", "RefinedNormal", "Binomial", "ShiftedBinomial"')
   }
   
   if(verbose){
@@ -159,28 +170,30 @@ getMutexNV_Meff <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
   }
   if (mixed) {
     if(verbose){
-      message("Improving low p.values with exact method...")
+      message("Improving low p-values with exact method...")
     }
     # Mixed method: use approximation and, if the p.value is small, compute the exact p.value
     II <- which(pvals < th, arr.ind = TRUE)
     II <- II[II[,2] > II[,1],,drop=F] # Remove half of them
     if (nrow(II) > 0){
       if(parallel) {
-        no_cores <- detectCores(logical = FALSE) - 1
+        if(is.null(no_cores)){
+          no_cores <- detectCores(logical = FALSE) - 1          
+        }
         cl <- makeCluster(no_cores)
         if(verbose){
           message("Creating cluster...")
         }
         clusterExport(cl, c("ppbinom"))
         pair <- 1:nrow(II)
-        pvalue <- parSapply(cl, pair, function (pair, II, PM) {
+        pvalue <- parSapply(cl, pair, function (pair, II, PM,Mevents) {
           genei <- II[pair,1]
           genej <- II[pair,2]
           pp <- PM[genei,] * PM[genej,]
           pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
         }, II, PM,Mevents)
         pvals[II] <- pvalue
-        pvals[II[,c(2,1)]] <- pvalue # To keep symmetry
+        pvals[II[,c(2,1),drop=F]] <- pvalue # To keep symmetry
         
         stopCluster(cl)
       } else {

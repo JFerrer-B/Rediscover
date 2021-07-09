@@ -72,5 +72,14 @@ test_getMutexAB <- function() {
                              th = 1e-2, verbose = FALSE, parallel = FALSE), error=conditionMessage)
   checkIdentical("input B must be binary", obs)
   
+  obs <- tryCatch(getMutexAB(A = matrix(sample(0:1, 10, replace = TRUE), ncol = 5), 
+                             PMA = getPM(A),
+                             B = matrix(1,nrow = 10,ncol = 5),
+                             PMB = getPM(B),method = "a",
+                             lower.tail = TRUE, 
+                             mixed = FALSE,
+                             th = 1e-2, verbose = FALSE, parallel = FALSE), error=conditionMessage)
+  checkIdentical('method must be "Exact", "RefinedNormal", "Binomial", "ShiftedBinomial"', obs)
+  
 }
 

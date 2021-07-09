@@ -1,6 +1,6 @@
 ---
 title: "Introduction to Rediscover"
-author: "Juan A. Ferrer-Bonsoms & Laura Jareno & Angel Rubio"
+author: "Juan A. Ferrer-Bonsoms, Laura Jareno & Angel Rubio"
 date: "`r BiocStyle::doc_date()`"
 abstract: >
   *Rediscover* is an R package to identify mutually exclusive genomic events. It reimplements a privious R package (*Discover*) whose main contribution is a statistical analysis based on the Poisson-Binomial distribution that takes into account that some samples are more mutated than others. *Rediscover* is much faster than the <a href="https://github.com/NKI-CCB/DISCOVER" target="_blank"> discover </a> implementation.
@@ -26,6 +26,7 @@ library(kableExtra)
 library(maftools)
 library(TCGAbiolinks)
 library(parallel)
+library(qvalue)
 ```
 
 ```{r style, echo = FALSE, results = 'asis'}
@@ -105,7 +106,16 @@ PM_COAD <- getPM(TCGA_COAD)
 
 From the probability matrix and the number of samples in which two genes are co-mutated, p-values can be estimated using the Poisson-Binomial distribution. That is, the probability of two genes being mutually exclusive is obtained. The p-values obtained are stored in a `Matrix` class in order to be memory efficient.
 
-*Rediscover* offers different functions depending on the desired study:
+*Rediscover* offers different functions depending on the desired study: Using a single matrix (`getMutex` function), using two matrices (`getMutexAB` function), using a specific group of genes (`getMutexGroup` function).
+
+As explained below, the p-values can be estimated using the Poisson-Binomial distribution. 
+Both functions `getMutex` and `getMutexAB` have four different approaches to estimate the
+Poisson-Binomial distribution:
+
+* **ShiftedBinomial**: (by default) that correspond to a shifted Binomial with three parameters (Peköz, Shwartz, Christiansen, & Berlowitz, 2010).
+* **Exact**: that use the exact formula using the `PoissonBinomial` Rpackage based on the work from (Biscarri, Zhao, & Brunner, 2018).
+*  **Binomial**: with two parameters (Cam, 1960).
+*  **RefinedNormal**: that is based on the work from  (Volkova, 1996).
 
 ## Using a single matrix
 
@@ -115,6 +125,7 @@ The inputs of `getMutex` are:
 * **A:**	The binary matrix with the mutation information.
 * **PM:**	The corresponding probability matrix of A that can be computed using function `getPM`. By default is equal to `getPM(A)`.
 * **lower.tail** True if mutually exclusive test. False for co-ocurrence. By default is TRUE.
+* **method** one of the following: "ShiftedBinomial" (default),"Exact", "Binomial", and "RefinedNormal".
 * **verbose**	The verbosity of the output. By default is FALSE
 
 The following code chunk shows an example of how to perform this function:
@@ -131,7 +142,7 @@ mymutex <- getMutex(A=A_example,PM=PMA)
 
 As in the previous case, an example is shown when using matrices of class Matrix.
 
-```{r getMutex_Matrix, eval=TRUE}
+```{r getMutex_Matrix_2, eval=TRUE}
 
 data("A_Matrix")
 
@@ -142,7 +153,7 @@ mymutex <- getMutex(A=A_Matrix,PM=PMA_Matrix)
 ```
 
 
-Finally, as in the previous case, an example of how to apply this function to a real case has been carried out. Specifically, information available in *The Cancer Genome Atlas Program (TCGA) on colon adenocarcinoma (COAD)* has been used.
+Finally, as in the previous case, an example of how to apply this function to a real case has been carried out. Specifically, information available in *The Cancer Genome Atlas Program (TCGA) on colon adenocarcinoma (COAD)* has been used. We applied to the top 100 most mutated genes.
 
 
 ```{r getMutex_COAD, eval=TRUE}
@@ -150,7 +161,7 @@ Finally, as in the previous case, an example of how to apply this function to a 
 data("TCGA_COAD")
 data("PM_COAD")
 
-COAD_mutex <- getMutex(TCGA_COAD, PM_COAD)
+COAD_mutex <- getMutex(TCGA_COAD[1:100,], PM_COAD[1:100,])
 
 ```
 
@@ -158,18 +169,26 @@ COAD_mutex <- getMutex(TCGA_COAD, PM_COAD)
 
 Moreover, there are some extra inputs that if user want to use the **exact formula of the Poison-Binomial distribution**: 
 
-* **mixed**	option to compute lower p.values with an exact method. By default FALSE
+* **mixed**	option to compute lower p.values with an exact method. By default TRUE
 * **th:**	upper threshold of p.value to apply the exact method.
 * **parallel**	If the exact method is executed with a parallel process.
+* **no_cores** number of cores. If not stated number of cores of the CPU - 1.
 
-If the **mixed** parameter is set to `TRUE` the exact p.value is computed for p.values lower that the upper threshold (the parameter **th**). I.e. if mixed option is selected and th is set to 1, all the p.values are computed with the exact formula. The following code chunk shows performs the previous test but applying the exact method for p.values lower than 0.001.
+By default, the **mixed** parameter is set to `TRUE` and the exact p-value is computed for p-values lower that the upper threshold (the parameter **th**, which default value is 0.05). I.e. if mixed option is selected and th is set to 1, all the p-values are computed with the exact formula. The following code chunk shows performs the previous test but applying the exact method for p-values lower than 0.001.
 
 ```{r getMutex_COAD_exact, eval=TRUE}
 data("TCGA_COAD")
 data("PM_COAD")
-COAD_mutex_exact <- getMutex(TCGA_COAD, PM_COAD,mixed = TRUE,th = 0.001)
+COAD_mutex_exact <- getMutex(TCGA_COAD[1:100,], PM_COAD[1:100,],mixed = TRUE,th = 0.001)
 ```
 
+If the **mixed** parameter is set to `FALSE` all the p-values are computed with the approximation selected. The following code chunk show an example of how to performe the previous test but applying the `Binomial` approximation for all the p-values:
+
+```{r getMutex_COAD_exact_2, eval=TRUE}
+data("TCGA_COAD")
+data("PM_COAD")
+COAD_mutex_exact <- getMutex(TCGA_COAD[1:100,], PM_COAD[1:100,],mixed = FALSE,method = "Binomial")
+```
 
 
 ## Using two matrices
@@ -186,12 +205,14 @@ Therefore, the inputs required by `getMutexAB` are:
 In addition, in this case there are also some extra possible entries that have been previously defined, but could be modified by the user: 
 
 * **lower.tail**	True if mutually exclusive test. False for co-ocurrence. By default is TRUE.
+* **method** one of the following: "ShiftedBinomial" (default),"Exact", "Binomial", and "RefinedNormal".
 * **mixed** 	option to compute lower p.values with an exact method. By default TRUE.
 * **th:**	upper threshold of p.value to apply the exact method.
 * **verbose**	The verbosity of the output.
 * **parallel**	If the exact method is executed with a parallel process.
+* **no_cores** number of cores. If not stated number of cores of the CPU - 1.
 
-Continuing with the example, in this case the result will not be a matrix with the probability that genes being mutually exclusive, but rather a matrix with the probability that genes being amplified. The following code chunk shows an example of how to perform this function:
+Continuing with the example, in this case the result will not be a matrix with the probability that genes being mutually exclusive, but rather a matrix with the probability that genes being amplified. The following code chunk shows an example of how to perform this function with the default parameters.
 
 ```{r getMutexAB_matrix, eval=TRUE}
 
@@ -207,7 +228,7 @@ mismutex <- getMutexAB(A=A_example, PM=PMA, B=B_example, PMB = PMB)
 
 As in the previous cases, the following code chunk shows an example when using matrices of class Matrix.
 
-```{r getMutexAB_Matrix, eval=TRUE}
+```{r getMutexAB_Matrix_2, eval=TRUE}
 
 data("A_Matrix")
 data("B_Matrix")
@@ -219,7 +240,7 @@ mismutex <- getMutexAB(A=A_Matrix, PM=PMA, B=B_Matrix, PMB = PMB)
 
 ```
 
-Finally, the next code chunk shows an example of how to apply this function to a real case. Specifically, information available in The Cancer Genome Atlas Program (TCGA) on colon adenocarcinoma (COAD) has been used. In this case, the extra matrix B provides information about the amplifications present in different samples and two matrices (TCGA_COAD_AMP and AMP_COAD) with the same size have been constructed.
+Finally, the next code chunk shows an example of how to apply this function to a real case. Specifically, information available in The Cancer Genome Atlas Program (TCGA) on colon adenocarcinoma (COAD) has been used. In this case, the `TCGA_COAD_AMP` matrix correspond to the most 1000 mutated genes, and the extra matrix `AMP_COAD` provides information about the amplifications over 1000 genes. The example run `getMutexAB` with the default parameters.
 
 ```{r getMutexAB_COAD, eval=TRUE}
 
@@ -232,6 +253,22 @@ mismutex <- getMutexAB(A=TCGA_COAD_AMP, PMA=PM_TCGA_COAD_AMP,
                        B=AMP_COAD, PMB = PM_AMP_COAD)
 
 ```
+
+
+In the previous example, TCGA_COAD_AMP and AMP_COAD share the same number of rown, but this is not needed. The following code chunk show the sample analysis but with the 100 most mutated genes and 50 amplificated genes.
+
+```{r getMutexAB_COAD_2, eval=TRUE}
+
+data("TCGA_COAD_AMP")
+data("AMP_COAD")
+data("PM_TCGA_COAD_AMP")
+data("PM_AMP_COAD")
+
+mismutex <- getMutexAB(A=TCGA_COAD_AMP[1:100,], PMA=PM_TCGA_COAD_AMP[1:100,], 
+                       B=AMP_COAD[1:50,], PMB = PM_AMP_COAD[1:50,])
+
+```
+
 
 
 ## Using a specific group of genes
@@ -326,8 +363,15 @@ somaticInteractions(maf = coad.maf, top = 35, pvalue = c(1e-2, 2e-3))
 
 However, Figure 5 shows the result when applying `discoversomaticInteractions` function. It is observed that the result is very different from the previous one, as in this case more mutually exclusive genes appear.
 
+The `discoversomaticInteractions` internally calls the `getMutex` function. Therefore, it has some extra parameter in order to set the parameters of `getMutex`, that are:
+
+* **getMutexMethod** Method for the `getMutex` function (by default "ShiftedBinomial")
+* **getMutexMixed** Mixed parameter for the `getMutex` function (by default TRUE)
+
+The following code chunk show an example of how to apply this function:
+
 ```{r discsomInter_COAD, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, results='hide'}
-discoversomaticInteractions(maf = coad.maf, top = 35, pvalue = c(1e-2, 2e-3))
+discoversomaticInteractions(maf = coad.maf, top = 35, pvalue = c(1e-2, 2e-3),getMutexMixed=FALSE)
 ```
 
 ![**Figure 5.** Somatic Interactions plot of Colon Adenocarcinoma using discoversomaticInteractions function.  ](coad_discoversomaticInteractions.png)
@@ -347,6 +391,20 @@ Finally, analyzing the similarities between the two Somatic Interaction figures 
 
 Therefore, analyzing all these conclusions, it is obtained that, as predicted by the oncoplot analysis, APC, TP53, TTN and KRAS are mutually exclusive. But, genes that seem co-occurrent when applying `somaticInteractions`, in reality are not and that is demonstrated when applying `discoversomaticInteractions`. 
 
+
+# extra: compute the q-value
+
+There are several methods for calculating the corrected p-values (q-values). The following example shows how to calculate the q-values using the `qvalue` library:
+
+```{r qvalue, eval=TRUE}
+
+data("TCGA_COAD")
+data("PM_COAD")
+COAD_mutex <- getMutex(TCGA_COAD[1:100,], PM_COAD[1:100,])
+COAD_mutex_qvalue <- COAD_mutex
+COAD_mutex_qvalue@x <- qvalue::qvalue(COAD_mutex_qvalue@x)$qvalue
+
+```
 
 
 

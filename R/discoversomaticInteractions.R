@@ -6,6 +6,8 @@
 #' @param top check for interactions among top 'n' number of genes. Defaults to top 25. genes
 #' @param genes List of genes among which interactions should be tested. If not provided, test will be performed between top 25 genes.
 #' @param pvalue Default c(0.05, 0.01) p-value threshold. You can provide two values for upper and lower threshold.
+#' @param getMutexMethod Method for the `getMutex` function (by default "ShiftedBinomial")
+#' @param getMutexMixed Mixed parameter for the `getMutex` function (by default TRUE)
 #' @param returnAll If TRUE returns test statistics for all pair of tested genes. Default FALSE, returns for only genes below pvalue threshold.
 #' @param geneOrder Plot the results in given order. Default NULL.
 #' @param fontSize 	cex for gene names. Default 0.8
@@ -24,6 +26,10 @@
 #' @param pvSymbols vector of pch numbers for symbols of p-value for upper and lower thresholds c(upper, lower). Default c(46, 42) 
 #' @param limitColorBreaks limit color to extreme values. Default TRUE
 #' 
+#' @details Internally, this function run the getMutex function. With the 'getMutexMethod' parameter user might select
+#' the 'method' parameter of the getMutex function. For more details run '?getMutex'
+#' 
+#' #' @return A list of data.tables and it will print a heatmap with the results.
 #' 
 #' @examples 
 #' \donttest{
@@ -36,7 +42,6 @@
 #' 
 #' }
 #' 
-#' @return A list of data.tables and it will print a heatmap with the results.
 #' 
 #' @references Mayakonda A, Lin DC, Assenov Y, Plass C, Koeffler HP. 2018. Maftools:
 #'    efficient and comprehensive analysis of somatic variants in cancer.
@@ -49,12 +54,15 @@
 #' @importFrom utils getFromNamespace
 #' @export
 
-discoversomaticInteractions <- function (maf, top = 25, genes = NULL, pvalue = c(0.05, 0.01), 
-          returnAll = TRUE, geneOrder = NULL, fontSize = 0.8, showSigSymbols = TRUE, 
-          showCounts = FALSE, countStats = "all", countType = "all", 
-          countsFontSize = 0.8, countsFontColor = "black", colPal = "BrBG", 
-          showSum = TRUE, colNC = 9, nShiftSymbols = 5, sigSymbolsSize = 2, 
-          sigSymbolsFontSize = 0.9, pvSymbols = c(46, 42), limitColorBreaks = TRUE){
+discoversomaticInteractions <- function (maf, top = 25, genes = NULL, pvalue = c(0.05, 0.01),
+                                         getMutexMethod = "ShiftedBinomial",getMutexMixed = TRUE,
+                                         returnAll = TRUE, geneOrder = NULL, fontSize = 0.8, 
+                                         showSigSymbols = TRUE, showCounts = FALSE, countStats = "all", 
+                                         countType = "all", countsFontSize = 0.8, 
+                                         countsFontColor = "black", colPal = "BrBG", showSum = TRUE,
+                                         colNC = 9, nShiftSymbols = 5, sigSymbolsSize = 2, 
+                                         sigSymbolsFontSize = 0.9, pvSymbols = c(46, 42), 
+                                         limitColorBreaks = TRUE){
   
   
   oldpar <- par(no.readonly = TRUE)
@@ -116,8 +124,8 @@ discoversomaticInteractions <- function (maf, top = 25, genes = NULL, pvalue = c
   rownames(PM) <- colnames(mutMat)
   
   interactions <- getMutex(t(as.matrix(mutMat[,topgenes])), PM = PM[topgenes,],
-                           lower.tail = T,
-                           mixed = F)
+                           lower.tail = T,method = getMutexMethod,
+                           mixed = getMutexMixed)
 
   interactions <- log10(interactions * .5) *(interactions <.5) - 
     log10((1-interactions) * .5) *(interactions >=.5)

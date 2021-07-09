@@ -28,4 +28,15 @@ test_getMutex <- function() {
                            th = 1e-2, verbose = FALSE, parallel = FALSE), error=conditionMessage)
   checkIdentical("input A must have at least 1 row and 1 column", obs)
   
+  obs <- tryCatch(getMutex(A = matrix(1,nrow = 10,ncol = 2), 
+                           PM = getPM(A), 
+                           lower.tail = TRUE,
+                           method = "a",
+                           mixed = FALSE,
+                           th = 1e-2, verbose = FALSE, parallel = FALSE), error=conditionMessage)
+  checkIdentical('method must be "Exact", "RefinedNormal", "Binomial", "ShiftedBinomial"', obs)
+  
 }
+
+
+
