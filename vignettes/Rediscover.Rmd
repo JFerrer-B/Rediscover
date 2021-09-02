@@ -351,7 +351,7 @@ Analyzing Figure 3, it can be seen that there are samples with a high number of 
 
 Furthermore, looking at the pattern of mutations, it could be predicted that APC, TP53 and TTN and KRAS are mutually exclusive, as it is observed that there are areas in which one of the genes is mutated but the rest are not.
 
-Next, to further deepen the analysis obtained from the oncoplot, Somatic Interactions plots were made, which determines the co-occurrence and mutual exclusivity between genes. Specifically, two plots have been carried out the first one using the function provided by the *discover* package, i.e. `somaticInteractions`, an the second one using the last of the functions created in *Rediscover* package; `discoversomaticInteractions`. 
+Next, to further deepen the analysis obtained from the oncoplot, Somatic Interactions plots were made, which determines the co-occurrence and mutual exclusivity between genes. Specifically, two plots have been carried out the first one using the function provided by the *maftools* package, i.e. `somaticInteractions`, an the second one using the last of the functions created in *Rediscover* package; `discoversomaticInteractions`. 
 
 Figure 4 shows the result when applying `somaticInteractions` function and it can be seen that most of genes are co-occurrent. 
 
