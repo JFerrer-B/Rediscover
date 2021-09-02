@@ -198,12 +198,32 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
         stopCluster(cl)
       } else {
         pair <- 1:nrow(II)
-        pvalue <- sapply(pair, function (pair, II, PM, Mevents) {
+        nsamples <- ncol(Mevents)
+        pvalue <- sapply(pair, function (pair, II, PM, Mevents,nsamples) {
           genei <- II[pair,1]
           genej <- II[pair,2]
           pp <- PM[genei,] * PM[genej,]
-          pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
-        }, II, PM,Mevents)
+          if(Mevents[genei,genej]==0){
+            pvalue <- prod(1-pp)
+            if(lower.tail==FALSE){
+              pvalue <- 1-pvalue
+            }
+          }else if(Mevents[genei,genej]==1){
+            pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
+            if(lower.tail==FALSE){
+              pvalue <- 1-pvalue
+            }
+          }else{
+            # pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
+            if(nsamples<4000){
+              pvalue <- ppoisbin(Mevents[genei,genej], pp, method = "DC", lower.tail = lower.tail)    
+            }else{
+              pvalue <- ppoisbin(Mevents[genei,genej], pp, method = "ShiftConvolve", lower.tail = lower.tail)    
+            }
+            
+          }
+          return(pvalue)
+        }, II, PM,Mevents,nsamples)
         pvals[II] <- pvalue
         pvals[II[,c(2,1),drop=F]] <- pvalue # To keep symmetry
       }
