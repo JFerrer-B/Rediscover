@@ -22,7 +22,7 @@ test_getMutexGroup <- function() {
                                 PM = 12, 
                                 type = "Impurity", 
                                 lower.tail = TRUE), error=conditionMessage)
-  checkIdentical("input PM must be a Matrix or a matrix class", obs)
+  checkIdentical("input PM must be Matrix, matrix or PMatrix class", obs)
   
   obs <- tryCatch(getMutexGroup(A = matrix(NA,nrow = 10,ncol = 0), 
                            PM = matrix(sample(0:1, 25, replace=TRUE), ncol=5), 

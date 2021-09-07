@@ -146,3 +146,12 @@ speedglm.wfit2 <- function (y, X, intercept = TRUE, weights = NULL, row.chunk = 
   rval
 }
 
+#' @rdname InternalFunctions
+expand.grid_fast <- function(a,b){
+  cbind(
+    rep(a,each=length(b))
+    ,
+    # rep(b,length(a))
+    b
+  )
+}

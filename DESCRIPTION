@@ -23,7 +23,9 @@ Depends:
     R (>= 4.0),
     Matrix,
     speedglm,
-    PoissonBinomial
+    PoissonBinomial,
+    ShiftConvolvePoibin,
+    utils
 Imports:
     maftools,
     data.table,

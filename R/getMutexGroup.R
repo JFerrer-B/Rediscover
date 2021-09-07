@@ -55,8 +55,8 @@ getMutexGroup <- function(A = NULL, PM = NULL, type ="Impurity", lower.tail = TR
     stop("not probability matrix PM")
   }
   
-  if(!is(PM,"matrix") & !is(PM,"Matrix")){
-    stop("input PM must be a Matrix or a matrix class")
+  if(!is(PM,"matrix") & !is(PM,"Matrix") & !is(PM,"PMatrix")){
+    stop("input PM must be Matrix, matrix or PMatrix class")
   }
   
   if(nrow(A)==0 | ncol(A) == 0){
@@ -71,10 +71,13 @@ getMutexGroup <- function(A = NULL, PM = NULL, type ="Impurity", lower.tail = TR
     stop("input A must be binary")
   }
   
+  PM <- as.matrix(PM)
   if(max(PM)>1){
     stop("input PM must be binary")
   }
 
+  
+  
   if (type == "Impurity") {
     success <- sum((colSums(A) >= 2))
     pp <- 1- apply(PM, 2, function(PM) {ppbinom(1,PM)})

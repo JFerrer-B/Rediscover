@@ -21,34 +21,65 @@ PMatrix <- setClass(
 # TODO: implement row and colnames in the constructor and accessing to the matrix.
 
 ## Select rows
+# setMethod("[", signature(x = "PMatrix", i = "numeric", j = "missing"),
+#           function (x, i, j, ..., drop) { ## select rows
+#             na <- nargs()
+#             if(na == 3) {
+#               elog5 <- matrix(x@rowExps[i], ncol = 1) %*% matrix(x@colExps, nrow = 1)
+#               return(elog5 /(1+elog5))}
+#             else ## should not happen
+#               print(na)
+#               stop("PMatrix-internal error in <TsparseM>[i,,d]; please report")
+#           })
+
 setMethod("[", signature(x = "PMatrix", i = "numeric", j = "missing"),
           function (x, i, j, ..., drop) { ## select rows
             na <- nargs()
             if(na == 3) {
-              elog5 <- matrix(x@rowExps[i], ncol = 1) %*% matrix(x@colExps, nrow = 1)
-              return(elog5 /(1+elog5))}
+              # elog5 <- matrix(x@rowExps[i], ncol = 1) %*% matrix(x@colExps, nrow = 1)
+              # return(elog5 /(1+elog5))}
+              x@rowExps <- x@rowExps[i]
+              return(x)}
             else ## should not happen
               print(na)
-              stop("PMatrix-internal error in <TsparseM>[i,,d]; please report")
+            stop("PMatrix-internal error in <TsparseM>[i,,d]; please report")
           })
 
+
 ## Select columns
+# setMethod("[", signature(x = "PMatrix", i = "missing", j = "numeric"),
+#           function (x, i, j, ..., drop) { ## select columns
+#             na <- nargs()
+#             if(na == 3) {
+#               elog5 <- matrix(x@rowExps, ncol = 1) %*% matrix(x@colExps[j], nrow = 1)
+#               return(elog5 /(1+elog5))}
+#             else ## should not happen
+#               stop("PMatrix-internal error in <TsparseM>[i,,d]; please report")
+#           })
+
 setMethod("[", signature(x = "PMatrix", i = "missing", j = "numeric"),
           function (x, i, j, ..., drop) { ## select columns
             na <- nargs()
             if(na == 3) {
-              elog5 <- matrix(x@rowExps, ncol = 1) %*% matrix(x@colExps[j], nrow = 1)
-              return(elog5 /(1+elog5))}
+              # elog5 <- matrix(x@rowExps, ncol = 1) %*% matrix(x@colExps[j], nrow = 1)
+              # return(elog5 /(1+elog5))}
+              x@colExps <- x@colExps[i]
+              return(x)}
             else ## should not happen
               stop("PMatrix-internal error in <TsparseM>[i,,d]; please report")
           })
-## Select columns
+
+
+## Select columns and rows
 setMethod("[", signature(x = "PMatrix", i = "numeric", j = "numeric"),
           function (x, i, j, ..., drop) { ## select columns
             na <- nargs()
             if(na == 3) {
-              elog5 <- matrix(x@rowExps[i], ncol = 1) %*% matrix(x@colExps[j], nrow = 1)
-              return(elog5 /(1+elog5))}
+              # elog5 <- matrix(x@rowExps[i], ncol = 1) %*% matrix(x@colExps[j], nrow = 1)
+              # return(elog5 /(1+elog5))}
+              x@rowExps <- x@rowExps[i]
+              x@colExps <- x@colExps[j]
+              return(x)}
             else ## should not happen
               stop("Matrix-internal error in <TsparseM>[i,,d]; please report")
           })
@@ -56,8 +87,11 @@ setMethod("[", signature(x = "PMatrix", i = "numeric", j = "numeric"),
 ## A[ ij ]  where ij is (i,j) 2-column matrix :
 setMethod("[", signature(x = "PMatrix",i = "matrix", j = "missing"),
             function (x, i, j, ..., drop){
-              elog5 <- matrix(x@rowExps[i[1,]], ncol = 1) %*% matrix(x@colExps[i[,1]], nrow = 1)
-              return(elog5 /(1+elog5))
+              # elog5 <- matrix(x@rowExps[i[1,]], ncol = 1) %*% matrix(x@colExps[i[,1]], nrow = 1)
+              # return(elog5 /(1+elog5))
+              x@rowExps <- x@rowExps[i[1,]]
+              x@colExps <- x@colExps[i[,1]]
+              return(x)
             })
 
 setMethod("as.matrix", signature(x = "PMatrix"),
@@ -75,7 +109,8 @@ setMethod("dim", signature(x = "PMatrix"),
 # TODO: show only part of the matrix to avoid memory problems.
 setMethod("print", signature(x = "PMatrix"),
           function (x, ...) { ## select columns
-            print(x[1:length(x@rowExps),],...)
+            xx <- as.matrix(x)
+            print(xx[1:length(x@rowExps),],...)
           })
 
 # TODO: show only part of the matrix to avoid memory problems.

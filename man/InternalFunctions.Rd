@@ -3,6 +3,7 @@
 \name{InternalFunctions}
 \alias{InternalFunctions}
 \alias{speedglm.wfit2}
+\alias{expand.grid_fast}
 \title{Rediscover Internal Functions}
 \usage{
 speedglm.wfit2(
@@ -30,6 +31,8 @@ speedglm.wfit2(
   trace = FALSE,
   ...
 )
+
+expand.grid_fast(a, b)
 }
 \value{
 Internal outputs
