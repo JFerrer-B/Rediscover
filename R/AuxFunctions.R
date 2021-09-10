@@ -146,7 +146,7 @@ speedglm.wfit2 <- function (y, X, intercept = TRUE, weights = NULL, row.chunk = 
   rval
 }
 
-#' @rdname InternalFunctions
+#' @rdname InternalFunctions 
 expand.grid_fast <- function(a,b){
   cbind(
     rep(a,each=length(b))
@@ -155,3 +155,25 @@ expand.grid_fast <- function(a,b){
     b
   )
 }
+
+
+# taken from https://www.r-bloggers.com/2015/06/identifying-the-os-from-r/
+#' @rdname InternalFunctions 
+get_os <- function(){
+  sysinf <- Sys.info()
+  if (!is.null(sysinf)){
+    os <- sysinf['sysname']
+    if (os == 'Darwin')
+      os <- "osx"
+  } else { ## mystery machine
+    os <- .Platform$OS.type
+    if (grepl("^darwin", R.version$os))
+      os <- "osx"
+    if (grepl("linux-gnu", R.version$os))
+      os <- "linux"
+  }
+  tolower(os)
+}
+
+
+

@@ -25,7 +25,8 @@ Depends:
     speedglm,
     PoissonBinomial,
     ShiftConvolvePoibin,
-    utils
+    utils,
+    matrixStats
 Imports:
     maftools,
     data.table,

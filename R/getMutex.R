@@ -60,6 +60,7 @@
 #' @importFrom speedglm control
 #' @importFrom PoissonBinomial ppbinom
 #' @importFrom ShiftConvolvePoibin ppoisbin
+#' @importFrom matrixStats rowProds
 #' @export
 
 getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE, 
@@ -105,7 +106,7 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
   }
   
   
-  
+  ###### ShiftedBinomial ########
   if (method == "ShiftedBinomial") {
     PM <- as.matrix(PM)
     l1 <- tcrossprod(PM) # expected means
@@ -129,8 +130,33 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
     # ppp <- pbinom(Mevents - s, n,p, lower.tail = lower.tail)
     pvals <- pstar
     pvals[II] <- ppp
+    
+    II_refni_0 <- which(Mevents == 0, arr.ind = TRUE)
+    if(length(II_refni_0) != 0){
+      II_refni_0 <- II_refni_0[II_refni_0[,2] > II_refni_0[,1],,drop=F] # Remove half of them
+      pvalue <- rowProds(1-PM[II_refni_0[,1],,drop=FALSE]*PM[II_refni_0[,2],,drop=FALSE])
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_0] <- pvalue
+      pvals[II_refni_0[,c(2,1),drop=F]] <- pvalue
+    }
+    
+    II_refni_1 <- which(Mevents == 1, arr.ind = TRUE)
+    if(length(II_refni_1) != 0){
+      II_refni_1 <- II_refni_1[II_refni_1[,2] > II_refni_1[,1],,drop=F] # Remove half of them
+      mini_pp <- PM[II_refni_1[,1],,drop=F]*PM[II_refni_1[,2],,drop=F]
+      pvalue <- rowProds(1-mini_pp)*(1+rowSums2(mini_pp/(1-mini_pp)))
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_1] <- pvalue
+      pvals[II_refni_1[,c(2,1),drop=F]] <- pvalue
+    }
+    
     pvals <- as(forceSymmetric(pvals, "L"),"dspMatrix")
   }
+  ###### Binomial ########
   if (method == "Binomial") {
     PM <- as.matrix(PM)
     l1 <- tcrossprod(PM)
@@ -150,8 +176,33 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
     
     pvals <- p
     pvals[II] <- ppp
+    
+    II_refni_0 <- which(Mevents == 0, arr.ind = TRUE)
+    if(length(II_refni_0) != 0){
+      II_refni_0 <- II_refni_0[II_refni_0[,2] > II_refni_0[,1],,drop=F] # Remove half of them
+      pvalue <- rowProds(1-PM[II_refni_0[,1],,drop=FALSE]*PM[II_refni_0[,2],,drop=FALSE])
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_0] <- pvalue
+      pvals[II_refni_0[,c(2,1),drop=F]] <- pvalue
+    }
+    
+    II_refni_1 <- which(Mevents == 1, arr.ind = TRUE)
+    if(length(II_refni_1) != 0){
+      II_refni_1 <- II_refni_1[II_refni_1[,2] > II_refni_1[,1],,drop=F] # Remove half of them
+      mini_pp <- PM[II_refni_1[,1],,drop=F]*PM[II_refni_1[,2],,drop=F]
+      pvalue <- rowProds(1-mini_pp)*(1+rowSums2(mini_pp/(1-mini_pp)))
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_1] <- pvalue
+      pvals[II_refni_1[,c(2,1),drop=F]] <- pvalue
+    }
+    
     pvals <- as(forceSymmetric(pvals, "L"),"dspMatrix")
   }
+  ####### RefinedNormal #########
   if (method == "RefinedNormal") {
     PM <- as.matrix(PM)
     MeanEst <- tcrossprod(PM) # expected means
@@ -174,6 +225,31 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
     ppp[ppp > 1] <- 1
     
     pvals@x <- ppp
+    
+    II_refni_0 <- which(Mevents == 0, arr.ind = TRUE)
+    if(length(II_refni_0) != 0){
+      II_refni_0 <- II_refni_0[II_refni_0[,2] > II_refni_0[,1],,drop=F] # Remove half of them
+      pvalue <- rowProds(1-PM[II_refni_0[,1],,drop=FALSE]*PM[II_refni_0[,2],,drop=FALSE])
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_0] <- pvalue
+      pvals[II_refni_0[,c(2,1),drop=F]] <- pvalue
+    }
+    
+    II_refni_1 <- which(Mevents == 1, arr.ind = TRUE)
+    if(length(II_refni_1) != 0){
+      II_refni_1 <- II_refni_1[II_refni_1[,2] > II_refni_1[,1],,drop=F] # Remove half of them
+      mini_pp <- PM[II_refni_1[,1],,drop=F]*PM[II_refni_1[,2],,drop=F]
+      pvalue <- rowProds(1-mini_pp)*(1+rowSums2(mini_pp/(1-mini_pp)))
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_1] <- pvalue
+      pvals[II_refni_1[,c(2,1),drop=F]] <- pvalue
+    }
+    
+    
   }
   ####### exact ######
   if (method == "Exact"){
@@ -191,15 +267,28 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
       if(is.null(no_cores)){
         no_cores <- detectCores(logical = FALSE) - 1          
       }
-      cl <- makeCluster(no_cores)
+      my_os <- get_os()
+      if(my_os=="linux" | my_os=="osx"){
+        type_cl <- "FORK"
+      }else{
+        type_cl <- "PSOCK"
+      }
+      cl <- makeCluster(no_cores,type = type_cl)
       if(verbose){
         message("Creating cluster...")
       }
-      clusterExport(cl, c("ppbinom","ppoisbin","expand.grid_fast"))
+      # clusterExport(cl, c("ppbinom","ppoisbin","expand.grid_fast"))
+      clusterExport(cl, c("ppbinom","ppoisbin"))
       
       i <- 1:nrow(miniPM_2)
       pvalue <- parSapply(cl, i, function (i, Idx,llx, miniPM_2,Mevents) {
-        idx_kk <- expand.grid_fast(which(Idx[llx[1,i],]==1),which(Idx[llx[2,i],]==1))
+        
+        # idx_kk <- expand.grid_fast(which(Idx[llx[1,i],]==1),which(Idx[llx[2,i],]==1))
+        a <- which(Idx[llx[1,i],]==1)
+        b <- which(Idx[llx[2,i],]==1)
+        idx_kk <- cbind(rep(a,each=length(b)),b)
+        
+        
         pvals <- ppoisbin(Mevents[idx_kk], miniPM_2[i,], method = ppoisbin_method, lower.tail = lower.tail)
         if(any(Mevents[idx_kk]==0)){
           oox <- which(Mevents[idx_kk]==0)
@@ -227,7 +316,11 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
       for(i in 1:nrow(miniPM_2)){
         # i <- 1
         # idx_kk <- as.matrix(expand.grid(which(Idx[llx[1,i],]==1),which(Idx[llx[2,i],]==1)))
-        idx_kk <- expand.grid_fast(which(Idx[llx[1,i],]==1),which(Idx[llx[2,i],]==1))
+        # idx_kk <- expand.grid_fast(which(Idx[llx[1,i],]==1),which(Idx[llx[2,i],]==1))
+        a <- which(Idx[llx[1,i],]==1)
+        b <- which(Idx[llx[2,i],]==1)
+        idx_kk <- cbind(rep(a,each=length(b)),b)
+        
         pvals[idx_kk] <- ppoisbin(Mevents[idx_kk], miniPM_2[i,], method = ppoisbin_method, lower.tail = lower.tail)
         if(any(Mevents[idx_kk]==0)){
           oox <- which(Mevents[idx_kk]==0)
@@ -251,19 +344,26 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
     
     diag(pvals) <- 0
   }
+  ####### mixed #######
   if (mixed) {
     if(verbose){
       message("Improving low p-values with exact method...")
     }
     # Mixed method: use approximation and, if the p.value is small, compute the exact p.value
-    II <- which(pvals < th, arr.ind = TRUE)
+    II <- which(pvals < th & Mevents > 1, arr.ind = TRUE)
     II <- II[II[,2] > II[,1],,drop=F] # Remove half of them
     if (nrow(II) > 0){
       if(parallel) {
         if(is.null(no_cores)){
           no_cores <- detectCores(logical = FALSE) - 1          
         }
-        cl <- makeCluster(no_cores)
+        my_os <- get_os()
+        if(my_os=="linux" | my_os=="osx"){
+          type_cl <- "FORK"
+        }else{
+          type_cl <- "PSOCK"
+        }
+        cl <- makeCluster(no_cores,type = type_cl)
         if(verbose){
           message("Creating cluster...")
         }
@@ -273,22 +373,21 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
           genei <- II[pair,1]
           genej <- II[pair,2]
           pp <- PM[genei,] * PM[genej,]
-          if(Mevents[genei,genej]==0){
-            pvalue <- prod(1-pp)
-            if(lower.tail==FALSE){
-              pvalue <- 1-pvalue
-            }
-          }else if(Mevents[genei,genej]==1){
-            pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
-            if(lower.tail==FALSE){
-              pvalue <- 1-pvalue
-            }
-          }else{
-            # pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
-            pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
-            
-            
-          }
+          # if(Mevents[genei,genej]==0){
+          #   pvalue <- prod(1-pp)
+          #   if(lower.tail==FALSE){
+          #     pvalue <- 1-pvalue
+          #   }
+          # }else if(Mevents[genei,genej]==1){
+          #   pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
+          #   if(lower.tail==FALSE){
+          #     pvalue <- 1-pvalue
+          #   }
+          # }else{
+          # pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
+          pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
+          
+          # }
           return(pvalue)
         }, II, PM,Mevents)
         pvals[II] <- pvalue
@@ -301,22 +400,21 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
           genei <- II[pair,1]
           genej <- II[pair,2]
           pp <- PM[genei,] * PM[genej,]
-          if(Mevents[genei,genej]==0){
-            pvalue <- prod(1-pp)
-            if(lower.tail==FALSE){
-              pvalue <- 1-pvalue
-            }
-          }else if(Mevents[genei,genej]==1){
-            pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
-            if(lower.tail==FALSE){
-              pvalue <- 1-pvalue
-            }
-          }else{
-            # pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
-            pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
-            
-            
-          }
+          # if(Mevents[genei,genej]==0){
+          #   pvalue <- prod(1-pp)
+          #   if(lower.tail==FALSE){
+          #     pvalue <- 1-pvalue
+          #   }
+          # }else if(Mevents[genei,genej]==1){
+          #   pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
+          #   if(lower.tail==FALSE){
+          #     pvalue <- 1-pvalue
+          #   }
+          # }else{
+          # pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
+          pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
+          
+          # }
           return(pvalue)
         }, II, PM,Mevents)
         pvals[II] <- pvalue

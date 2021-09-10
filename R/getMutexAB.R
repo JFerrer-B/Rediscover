@@ -70,6 +70,7 @@
 #' @importFrom stats pnorm dnorm pbeta
 #' @importFrom speedglm control
 #' @importFrom PoissonBinomial ppbinom
+#' @importFrom matrixStats rowProds
 #' @importFrom ShiftConvolvePoibin ppoisbin
 #' @export
 
@@ -132,7 +133,7 @@ getMutexAB <- function(A, PMA = getPM(A), B, PMB = getPM(B), lower.tail = TRUE,
   }
   
   
-  
+  ###### RefinedNormal ######
   if (method == "RefinedNormal"){
     PMA <- as.matrix(PMA)
     PMB <- as.matrix(PMB)
@@ -156,9 +157,33 @@ getMutexAB <- function(A, PMA = getPM(A), B, PMB = getPM(B), lower.tail = TRUE,
     ppp[ppp > 1] <- 1
     
     pvals@x <- ppp
+    
+    II_refni_0 <- which(Mevents == 0, arr.ind = TRUE)
+    if(length(II_refni_0) != 0){
+      # II_refni_0 <- II_refni_0[II_refni_0[,2] > II_refni_0[,1],,drop=F] # Remove half of them
+      minipp <- PMA[II_refni_0[,1],,drop=FALSE]*PMB[II_refni_0[,2],,drop=FALSE]
+      pvalue <- rowProds(1-minipp)
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_0] <- pvalue
+      # pvals[II_refni_0[,c(2,1),drop=F]] <- pvalue
+    }
+    
+    II_refni_1 <- which(Mevents == 1, arr.ind = TRUE)
+    if(length(II_refni_1) != 0){
+      II_refni_1 <- II_refni_1[II_refni_1[,2] > II_refni_1[,1],,drop=F] # Remove half of them
+      mini_pp <- PMA[II_refni_1[,1],,drop=FALSE]*PMB[II_refni_1[,2],,drop=FALSE]
+      pvalue <- rowProds(1-mini_pp)*(1+rowSums2(mini_pp/(1-mini_pp)))
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_1] <- pvalue
+      pvals[II_refni_1[,c(2,1),drop=F]] <- pvalue
+    }
     # pvals <- as.matrix(pvals)
   }
-  
+  ###### ShiftedBinomial ######
   if (method == "ShiftedBinomial"){
     PMA <- as.matrix(PMA)
     PMB <- as.matrix(PMB)
@@ -185,9 +210,35 @@ getMutexAB <- function(A, PMA = getPM(A), B, PMB = getPM(B), lower.tail = TRUE,
     # ppp <- pbinom(Mevents - s, n,p, lower.tail = lower.tail)
     # pvals <- pstar
     pvals@x <- ppp
+    
+    II_refni_0 <- which(Mevents == 0, arr.ind = TRUE)
+    if(length(II_refni_0) != 0){
+      # II_refni_0 <- II_refni_0[II_refni_0[,2] > II_refni_0[,1],,drop=F] # Remove half of them
+      minipp <- PMA[II_refni_0[,1],,drop=FALSE]*PMB[II_refni_0[,2],,drop=FALSE]
+      pvalue <- rowProds(1-minipp)
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_0] <- pvalue
+      # pvals[II_refni_0[,c(2,1),drop=F]] <- pvalue
+    }
+    
+    II_refni_1 <- which(Mevents == 1, arr.ind = TRUE)
+    if(length(II_refni_1) != 0){
+      II_refni_1 <- II_refni_1[II_refni_1[,2] > II_refni_1[,1],,drop=F] # Remove half of them
+      mini_pp <- PMA[II_refni_1[,1],,drop=FALSE]*PMB[II_refni_1[,2],,drop=FALSE]
+      pvalue <- rowProds(1-mini_pp)*(1+rowSums2(mini_pp/(1-mini_pp)))
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_1] <- pvalue
+      pvals[II_refni_1[,c(2,1),drop=F]] <- pvalue
+    }
+    
+    
     # pvals <- as(forceSymmetric(pvals, "L"),"dspMatrix")
   }
-  
+  ###### Binomial ######
   if (method == "Binomial"){
     PMA <- as.matrix(PMA)
     PMB <- as.matrix(PMB)
@@ -211,6 +262,32 @@ getMutexAB <- function(A, PMA = getPM(A), B, PMB = getPM(B), lower.tail = TRUE,
     
     pvals <- Mevents
     pvals@x <- ppp
+    
+    II_refni_0 <- which(Mevents == 0, arr.ind = TRUE)
+    if(length(II_refni_0) != 0){
+      # II_refni_0 <- II_refni_0[II_refni_0[,2] > II_refni_0[,1],,drop=F] # Remove half of them
+      minipp <- PMA[II_refni_0[,1],,drop=FALSE]*PMB[II_refni_0[,2],,drop=FALSE]
+      pvalue <- rowProds(1-minipp)
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_0] <- pvalue
+      # pvals[II_refni_0[,c(2,1),drop=F]] <- pvalue
+    }
+    
+    II_refni_1 <- which(Mevents == 1, arr.ind = TRUE)
+    if(length(II_refni_1) != 0){
+      II_refni_1 <- II_refni_1[II_refni_1[,2] > II_refni_1[,1],,drop=F] # Remove half of them
+      mini_pp <- PMA[II_refni_1[,1],,drop=FALSE]*PMB[II_refni_1[,2],,drop=FALSE]
+      pvalue <- rowProds(1-mini_pp)*(1+rowSums2(mini_pp/(1-mini_pp)))
+      if(lower.tail==FALSE){
+        pvalue <- 1-pvalue
+      }
+      pvals[II_refni_1] <- pvalue
+      pvals[II_refni_1[,c(2,1),drop=F]] <- pvalue
+    }
+    
+    
     # pvals <- as(forceSymmetric(pvals, "L"),"dspMatrix")
   }
   ###### exact ######
@@ -233,15 +310,25 @@ getMutexAB <- function(A, PMA = getPM(A), B, PMB = getPM(B), lower.tail = TRUE,
       if(is.null(no_cores)){
         no_cores <- detectCores(logical = FALSE) - 1          
       }
-      cl <- makeCluster(no_cores)
+      my_os <- get_os()
+      if(my_os=="linux" | my_os=="osx"){
+        type_cl <- "FORK"
+      }else{
+        type_cl <- "PSOCK"
+      }
+      cl <- makeCluster(no_cores,type = type_cl)
       if(verbose){
         message("Creating cluster...")
       }
-      clusterExport(cl, c("Matrix","ppbinom","ppoisbin","expand.grid_fast"))
-      
+      # clusterExport(cl, c("Matrix","ppbinom","ppoisbin","expand.grid_fast"))
+      clusterExport(cl, c("Matrix","ppbinom","ppoisbin"))
       i <- 1:nrow(miniPM_2)
       pvalue <- parSapply(cl, i, function (i, Idx_A,Idx_B,llx, miniPM_2,Mevents) {
-        idx_kk <- expand.grid_fast(which(Idx_A[llx[i,1],]==1),which(Idx_B[llx[i,2],]==1))
+        # idx_kk <- expand.grid_fast(which(Idx_A[llx[i,1],]==1),which(Idx_B[llx[i,2],]==1))
+        a <- which(Idx_A[llx[i,1],]==1)
+        b <- which(Idx_B[llx[i,2],]==1)
+        idx_kk <- cbind(rep(a,each=length(b)),b)
+        
         pvals <- ppoisbin(Mevents[idx_kk], miniPM_2[i,], method = "DC", lower.tail = TRUE)
         if(any(Mevents[idx_kk]==0)){
           oox <- which(Mevents[idx_kk]==0)
@@ -301,13 +388,21 @@ getMutexAB <- function(A, PMA = getPM(A), B, PMB = getPM(B), lower.tail = TRUE,
     }
     # Mixed method: use approximation and, if the p-value is small, compute the exact p-value
     # browser()
-    II <- which(pvals < th, arr.ind = TRUE)
+    II <- which(pvals < th & Mevents >1, arr.ind = TRUE)
     if (nrow(II) > 0){
       if(parallel) {
         if(is.null(no_cores)){
           no_cores <- detectCores(logical = FALSE) - 1          
         }
-        cl <- makeCluster(no_cores)
+        
+        my_os <- get_os()
+        if(my_os=="linux" | my_os=="osx"){
+          type_cl <- "FORK"
+        }else{
+          type_cl <- "PSOCK"
+        }
+        cl <- makeCluster(no_cores,type = type_cl)
+        
         if(verbose){
           message("Creating cluster...")
         }
@@ -318,20 +413,20 @@ getMutexAB <- function(A, PMA = getPM(A), B, PMB = getPM(B), lower.tail = TRUE,
           genei <- II[pair,1]
           genej <- II[pair,2]
           pp <- PMA[genei,] * PMB[genej,]
-          if(Mevents[genei,genej]==0){
-            pvalue <- prod(1-pp)
-            if(lower.tail==FALSE){
-              pvalue <- 1-pvalue
-            }
-          }else if(Mevents[genei,genej]==1){
-            pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
-            if(lower.tail==FALSE){
-              pvalue <- 1-pvalue
-            }
-          }else{
-            # pvalue <- ppbinom(sum(A[genei,]*B[genej,]), pp, method = "DivideFFT", lower.tail = lower.tail)  
-            pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
-          }
+          # if(Mevents[genei,genej]==0){
+          #   pvalue <- prod(1-pp)
+          #   if(lower.tail==FALSE){
+          #     pvalue <- 1-pvalue
+          #   }
+          # }else if(Mevents[genei,genej]==1){
+          #   pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
+          #   if(lower.tail==FALSE){
+          #     pvalue <- 1-pvalue
+          #   }
+          # }else{
+          # pvalue <- ppbinom(sum(A[genei,]*B[genej,]), pp, method = "DivideFFT", lower.tail = lower.tail)  
+          pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
+          # }
           return(pvalue)
           
         }, II, PMA, PMB,Mevents)
@@ -344,21 +439,21 @@ getMutexAB <- function(A, PMA = getPM(A), B, PMB = getPM(B), lower.tail = TRUE,
           genei <- II[pair,1]
           genej <- II[pair,2]
           pp <- PMA[genei,] * PMB[genej,]
-          if(Mevents[genei,genej]==0){
-            pvalue <- prod(1-pp)
-            if(lower.tail==FALSE){
-              pvalue <- 1-pvalue
-            }
-          }else if(Mevents[genei,genej]==1){
-            pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
-            if(lower.tail==FALSE){
-              pvalue <- 1-pvalue
-            }
-          }else{
-            # pvalue <- ppbinom(sum(A[genei,]*B[genej,]), pp, method = "DivideFFT", lower.tail = lower.tail)  
-            pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
-          }
-          return(pvalue)
+          # if(Mevents[genei,genej]==0){
+          #   pvalue <- prod(1-pp)
+          #   if(lower.tail==FALSE){
+          #     pvalue <- 1-pvalue
+          #   }
+          # }else if(Mevents[genei,genej]==1){
+          #   pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
+          #   if(lower.tail==FALSE){
+          #     pvalue <- 1-pvalue
+          #   }
+          # }else{
+          # pvalue <- ppbinom(sum(A[genei,]*B[genej,]), pp, method = "DivideFFT", lower.tail = lower.tail)  
+          pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
+          # }
+          # return(pvalue)
           
         },II, PMA, PMB,Mevents)
         pvals[II] <- pvalue
