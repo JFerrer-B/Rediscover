@@ -67,7 +67,7 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
                             method = "ShiftedBinomial", mixed = TRUE,
                             th = 5e-2, verbose = FALSE, parallel = FALSE,no_cores=NULL){
   
-  
+  normal <- FALSE #for mutex option, use enhanced algorithm
   
   if(verbose){
     message("checking inputs...")
@@ -108,10 +108,10 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
   
   ###### ShiftedBinomial ########
   if (method == "ShiftedBinomial") {
-    PM <- as.matrix(PM)
-    l1 <- tcrossprod(PM) # expected means
-    l2 <- tcrossprod(PM*PM)
-    l3 <- tcrossprod(PM * PM * PM)
+    PM_2 <- as.matrix(PM)
+    l1 <- tcrossprod(PM_2) # expected means
+    l2 <- tcrossprod(PM_2*PM_2)
+    l3 <- tcrossprod(PM_2 * PM_2 * PM_2)
     
     pstar <- (l2-l3)/(l1-l2)
     nstar <- (l1 -l2)/(pstar*(1-pstar))
@@ -134,9 +134,9 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
   }
   ###### Binomial ########
   if (method == "Binomial") {
-    PM <- as.matrix(PM)
-    l1 <- tcrossprod(PM)
-    l2 <- tcrossprod(PM*PM)
+    PM_2 <- as.matrix(PM)
+    l1 <- tcrossprod(PM_2)
+    l2 <- tcrossprod(PM_2*PM_2)
     
     p <- l2/l1
     n <- l1 / p
@@ -158,10 +158,10 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
   }
   ####### RefinedNormal #########
   if (method == "RefinedNormal") {
-    PM <- as.matrix(PM)
-    MeanEst <- tcrossprod(PM) # expected means
-    varEst <- MeanEst - tcrossprod(PM*PM) # expected variance
-    gammEst <- varEst - 2*(MeanEst-varEst) + 2*tcrossprod(PM * PM * PM) # 3rd order correction
+    PM_2 <- as.matrix(PM)
+    MeanEst <- tcrossprod(PM_2) # expected means
+    varEst <- MeanEst - tcrossprod(PM_2*PM_2) # expected variance
+    gammEst <- varEst - 2*(MeanEst-varEst) + 2*tcrossprod(PM_2 * PM_2 * PM_2) # 3rd order correction
     sqrtVarEst <- sqrt(varEst) # expected standard deviations
     
     kk1 <- (Mevents + 0.5 - MeanEst)/sqrtVarEst
@@ -284,7 +284,7 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
       message("Improving low p-values with exact method...")
     }
     # Mixed method: use approximation and, if the p.value is small, compute the exact p.value
-    II <- which(pvals < th & Mevents > 1, arr.ind = TRUE)
+    II <- which(pvals < th, arr.ind = TRUE)
     II <- II[II[,2] > II[,1],,drop=F] # Remove half of them
     if (nrow(II) > 0){
       if(parallel) {
@@ -302,59 +302,212 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
           message("Creating cluster...")
         }
         clusterExport(cl, c("ppbinom","ppoisbin"))
-        pair <- 1:nrow(II)
-        pvalue <- parSapply(cl, pair, function (pair, II, PM,Mevents) {
-          genei <- II[pair,1]
-          genej <- II[pair,2]
-          pp <- PM[genei,] * PM[genej,]
-          # if(Mevents[genei,genej]==0){
-          #   pvalue <- prod(1-pp)
-          #   if(lower.tail==FALSE){
-          #     pvalue <- 1-pvalue
-          #   }
-          # }else if(Mevents[genei,genej]==1){
-          #   pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
-          #   if(lower.tail==FALSE){
-          #     pvalue <- 1-pvalue
-          #   }
-          # }else{
-          # pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
-          pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
+        if(normal){
+          pair <- 1:nrow(II)
+          pvalue <- parSapply(cl, pair, function (pair, II, PM,Mevents) {
+            genei <- II[pair,1]
+            genej <- II[pair,2]
+            pp <- PM_2[genei,] * PM_2[genej,]
+            if(Mevents[genei,genej]==0){
+              pvalue <- prod(1-pp)
+              if(lower.tail==FALSE){
+                pvalue <- 1-pvalue
+              }
+            }else if(Mevents[genei,genej]==1){
+              pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
+              if(lower.tail==FALSE){
+                pvalue <- 1-pvalue
+              }
+            }else{
+              # pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
+              pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
+            }
+            return(pvalue)
+          }, II, PM,Mevents)
+          pvals[II] <- pvalue
+          pvals[II[,c(2,1),drop=F]] <- pvalue # To keep symmetry
           
-          # }
-          return(pvalue)
-        }, II, PM,Mevents)
-        pvals[II] <- pvalue
-        pvals[II[,c(2,1),drop=F]] <- pvalue # To keep symmetry
-        
-        stopCluster(cl)
-      } else {
-        pair <- 1:nrow(II)
-        pvalue <- sapply(pair, function (pair, II, PM, Mevents) {
-          genei <- II[pair,1]
-          genej <- II[pair,2]
-          pp <- PM[genei,] * PM[genej,]
-          if(Mevents[genei,genej]==0){
-            pvalue <- prod(1-pp)
-            if(lower.tail==FALSE){
-              pvalue <- 1-pvalue
-            }
-          }else if(Mevents[genei,genej]==1){
-            pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
-            if(lower.tail==FALSE){
-              pvalue <- 1-pvalue
-            }
-          }else{
-            # pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
-            pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
+          stopCluster(cl)
+        }else{
+          genes_factor <- factor(PM@rowExps)
+          Idx <- as.matrix(sparseMatrix(i=as.numeric(genes_factor),j = 1:nrow(PM),x = 1))
+          miniPM <- as.matrix(PM[match(levels(genes_factor),PM@rowExps),])
+          llx <- combn(nrow(miniPM),2)
+          llx <- cbind(llx,rbind(c(1:nrow(miniPM)),c(1:nrow(miniPM))))
+          II_2 <- cbind(which(Idx[,II[,1]] == 1,arr.ind = T)[,1],
+                        which(Idx[,II[,2]] == 1,arr.ind = T)[,1])
+          pos <- factor(II_2 %*% rnorm(2))
+          
+          cat("length_pos=",length(levels(pos)),"\nII_2 = ",nrow(II_2),"\n")
+          pvals_2 <- as.matrix(pvals)
+          
+          # p_to_ad <- sapply(1:length(levels(pos)),function(i){
+          i <- 1:length(levels(pos))
+          p_to_ad <- parSapply(cl, i, function (i, II_2,pos,miniPM,II,pvals_2,th,Mevents) {
+            ix <- II_2[match(levels(pos)[i],pos),]
+            mi_pp <- miniPM[ix[1],]*miniPM[ix[2],]
+            idx_kk <- II[which(pos == levels(pos)[i]),,drop=F]
             
+            # idx_kk <- idx_kk[which(pvals[idx_kk]<th),,drop=F]
+            
+            idx_kk <- idx_kk[which(pvals_2[idx_kk]<th),,drop=F]
+            
+            miskk <- Mevents[idx_kk]
+            mispvalues <- vector(mode="numeric",length=length(miskk))
+            # mispvalues <- ppoisbin(miskk, mi_pp, method = ppoisbin_method, lower.tail = lower.tail)
+            oox_0 <- c()
+            oox_1 <- c()
+            if(any(Mevents[idx_kk]==0)){
+              oox_0 <- which(Mevents[idx_kk]==0)
+              pvalue <- prod(1-mi_pp)
+              if(lower.tail==FALSE){
+                pvalue <- 1-pvalue
+              }
+              # pvals[idx_kk][oox] <- pvalue
+              mispvalues[oox_0] <- pvalue
+              if(length(oox_0) == length(mispvalues)){
+                return(cbind(idx_kk,mispvalues))
+              }
+            }
+            if(any(Mevents[idx_kk]==1)){
+              oox_1 <- which(Mevents[idx_kk]==1)
+              pvalue <- prod(1-mi_pp) * (1+sum( mi_pp/(1-mi_pp)))
+              if(lower.tail==FALSE){
+                pvalue <- 1-pvalue
+              }
+              # pvals[idx_kk][oox] <- pvalue
+              mispvalues[oox_1] <- pvalue
+              if(length(oox_1) == length(mispvalues)){
+                return(cbind(idx_kk,mispvalues))
+              }
+            }
+            if(length(oox_0) > 0 | length(oox_1) > 0){
+              if(length(c(oox_0,oox_1)) == length(mispvalues)){
+                return(cbind(idx_kk,mispvalues))
+              }else{
+                mispvalues[-c(oox_0,oox_1)] <- ppoisbin(miskk[-c(oox_0,oox_1)], mi_pp, method = ppoisbin_method, lower.tail = lower.tail) 
+              }
+            }else{
+              mispvalues <- ppoisbin(miskk, mi_pp, method = ppoisbin_method, lower.tail = lower.tail)
+            }
+            return(cbind(idx_kk,mispvalues))
+          },II_2,pos,miniPM,II,pvals_2,th,Mevents)
+          stopCluster(cl)
+          if(is.list(p_to_ad)){
+            p_to_ad <- do.call(rbind,p_to_ad)  
+          }else{
+            p_to_ad <- t(p_to_ad)
           }
-          return(pvalue)
-        }, II, PM,Mevents)
-        pvals[II] <- pvalue
-        pvals[II[,c(2,1),drop=F]] <- pvalue # To keep symmetry
+          pvals[p_to_ad[,c(1,2),drop=F]] <- p_to_ad[,3] # To keep symmetry
+          pvals[p_to_ad[,c(2,1),drop=F]] <- p_to_ad[,3] # To keep symmetry
+          
+          
+        }
+        
+      } else {
+        if(normal){
+          pair <- 1:nrow(II)
+          PM <- as.matrix(PM)
+          pvalue <- sapply(pair, function (pair, II, PM, Mevents) {
+            genei <- II[pair,1]
+            genej <- II[pair,2]
+            pp <- PM[genei,] * PM[genej,]
+            if(Mevents[genei,genej]==0){
+              pvalue <- prod(1-pp)
+              if(lower.tail==FALSE){
+                pvalue <- 1-pvalue
+              }
+            }else if(Mevents[genei,genej]==1){
+              pvalue <- prod(1-pp) * (1+sum( pp/(1-pp)))
+              if(lower.tail==FALSE){
+                pvalue <- 1-pvalue
+              }
+            }else{
+              # pvalue <- ppbinom(Mevents[genei,genej], pp, method = "DivideFFT", lower.tail = lower.tail)
+              pvalue <- ppoisbin(Mevents[genei,genej], pp, method = ppoisbin_method, lower.tail = lower.tail)    
+              
+            }
+            return(pvalue)
+          }, II, PM,Mevents)
+          pvals[II] <- pvalue
+          pvals[II[,c(2,1),drop=F]] <- pvalue # To keep symmetry
+        }else{
+          genes_factor <- factor(PM@rowExps)
+          Idx <- as.matrix(sparseMatrix(i=as.numeric(genes_factor),j = 1:nrow(PM),x = 1))
+          miniPM <- as.matrix(PM[match(levels(genes_factor),PM@rowExps),])
+          llx <- combn(nrow(miniPM),2)
+          llx <- cbind(llx,rbind(c(1:nrow(miniPM)),c(1:nrow(miniPM))))
+          II_2 <- cbind(which(Idx[,II[,1]] == 1,arr.ind = T)[,1],
+                        which(Idx[,II[,2]] == 1,arr.ind = T)[,1])
+          pos <- factor(II_2 %*% rnorm(2))
+          
+          cat("length_pos=",length(levels(pos)),"\nII_2 = ",nrow(II_2),"\n")
+          pvals_2 <- as.matrix(pvals)
+          # for(i in 1:length(levels(pos))){
+          p_to_ad <- sapply(1:length(levels(pos)),function(i){
+            ix <- II_2[match(levels(pos)[i],pos),]
+            mi_pp <- miniPM[ix[1],]*miniPM[ix[2],]
+            idx_kk <- II[which(pos == levels(pos)[i]),,drop=F]
+            
+            # idx_kk <- idx_kk[which(pvals[idx_kk]<th),,drop=F]
+            
+            idx_kk <- idx_kk[which(pvals_2[idx_kk]<th),,drop=F]
+            
+            miskk <- Mevents[idx_kk]
+            mispvalues <- vector(mode="numeric",length=length(miskk))
+            # mispvalues <- ppoisbin(miskk, mi_pp, method = ppoisbin_method, lower.tail = lower.tail)
+            oox_0 <- c()
+            oox_1 <- c()
+            if(any(Mevents[idx_kk]==0)){
+              oox_0 <- which(Mevents[idx_kk]==0)
+              pvalue <- prod(1-mi_pp)
+              if(lower.tail==FALSE){
+                pvalue <- 1-pvalue
+              }
+              # pvals[idx_kk][oox] <- pvalue
+              mispvalues[oox_0] <- pvalue
+              if(length(oox_0) == length(mispvalues)){
+                return(cbind(idx_kk,mispvalues))
+              }
+            }
+            if(any(Mevents[idx_kk]==1)){
+              oox_1 <- which(Mevents[idx_kk]==1)
+              pvalue <- prod(1-mi_pp) * (1+sum( mi_pp/(1-mi_pp)))
+              if(lower.tail==FALSE){
+                pvalue <- 1-pvalue
+              }
+              # pvals[idx_kk][oox] <- pvalue
+              mispvalues[oox_1] <- pvalue
+              if(length(oox_1) == length(mispvalues)){
+                return(cbind(idx_kk,mispvalues))
+              }
+            }
+            if(length(oox_0) > 0 | length(oox_1) > 0){
+              if(length(c(oox_0,oox_1)) == length(mispvalues)){
+                return(cbind(idx_kk,mispvalues))
+              }else{
+                mispvalues[-c(oox_0,oox_1)] <- ppoisbin(miskk[-c(oox_0,oox_1)], mi_pp, method = ppoisbin_method, lower.tail = lower.tail) 
+              }
+            }else{
+              mispvalues <- ppoisbin(miskk, mi_pp, method = ppoisbin_method, lower.tail = lower.tail)
+            }
+            return(cbind(idx_kk,mispvalues))
+          })
+          if(is.list(p_to_ad)){
+            p_to_ad <- do.call(rbind,p_to_ad)  
+          }else{
+            p_to_ad <- t(p_to_ad)
+          }
+          pvals[p_to_ad[,c(1,2),drop=F]] <- p_to_ad[,3] # To keep symmetry
+          pvals[p_to_ad[,c(2,1),drop=F]] <- p_to_ad[,3] # To keep symmetry
+          
+          # pvals[idx_kk[,c(2,1),drop=F]] <- pvals[idx_kk] # To keep symmetry
+          # }
+        }
+        
       }
     }
+    diag(pvals) <- 0
     pvals <- as(pvals, "dspMatrix")
   }
   if(verbose){
