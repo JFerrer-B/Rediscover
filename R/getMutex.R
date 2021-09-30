@@ -338,7 +338,7 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
                         which(Idx[,II[,2]] == 1,arr.ind = T)[,1])
           pos <- factor(II_2 %*% rnorm(2))
           
-          cat("length_pos=",length(levels(pos)),"\nII_2 = ",nrow(II_2),"\n")
+          # cat("length_pos=",length(levels(pos)),"\nII_2 = ",nrow(II_2),"\n")
           pvals_2 <- as.matrix(pvals)
           
           # p_to_ad <- sapply(1:length(levels(pos)),function(i){
@@ -441,7 +441,7 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
                         which(Idx[,II[,2]] == 1,arr.ind = T)[,1])
           pos <- factor(II_2 %*% rnorm(2))
           
-          cat("length_pos=",length(levels(pos)),"\nII_2 = ",nrow(II_2),"\n")
+          # cat("length_pos=",length(levels(pos)),"\nII_2 = ",nrow(II_2),"\n")
           pvals_2 <- as.matrix(pvals)
           # for(i in 1:length(levels(pos))){
           p_to_ad <- sapply(1:length(levels(pos)),function(i){
