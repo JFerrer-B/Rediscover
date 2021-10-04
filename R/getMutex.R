@@ -343,7 +343,7 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
           
           # p_to_ad <- sapply(1:length(levels(pos)),function(i){
           i <- 1:length(levels(pos))
-          p_to_ad <- parSapply(cl, i, function (i, II_2,pos,miniPM,II,pvals_2,th,Mevents) {
+          p_to_ad <- parLapply(cl, i, function (i, II_2,pos,miniPM,II,pvals_2,th,Mevents) {
             ix <- II_2[match(levels(pos)[i],pos),]
             mi_pp <- miniPM[ix[1],]*miniPM[ix[2],]
             idx_kk <- II[which(pos == levels(pos)[i]),,drop=F]
@@ -444,7 +444,7 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
           # cat("length_pos=",length(levels(pos)),"\nII_2 = ",nrow(II_2),"\n")
           pvals_2 <- as.matrix(pvals)
           # for(i in 1:length(levels(pos))){
-          p_to_ad <- sapply(1:length(levels(pos)),function(i){
+          p_to_ad <- lapply(1:length(levels(pos)),function(i){
             ix <- II_2[match(levels(pos)[i],pos),]
             mi_pp <- miniPM[ix[1],]*miniPM[ix[2],]
             idx_kk <- II[which(pos == levels(pos)[i]),,drop=F]
