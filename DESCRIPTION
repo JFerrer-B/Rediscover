@@ -1,7 +1,7 @@
 Package: Rediscover
 Type: Package
 Title: Identify Mutually Exclusive Mutations
-Version: 0.2.1
+Version: 0.3.0
 Authors@R: c(person("Juan A. Ferrer-Bonsoms", "Developer", role = c("aut", "cre"),
                      email = "jafhernandez@tecnun.es"),
               person("Laura Jareno", "Developer", role = "aut"),
@@ -47,7 +47,7 @@ Suggests:
     qvalue
 License: Artistic-2.0
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Encoding: UTF-8
 biocViews: mutex
 VignetteBuilder: knitr

@@ -19,6 +19,6 @@ A binary matrix, with information about amplifications in Colon Adenocarcinoma, 
 }
 \examples{
 data(AMP_COAD)
-## maybe str(AMP_COAD) ; plot(AMP_COAD) ...
+## maybe str(AMP_COAD) 
 }
 \keyword{datasets}

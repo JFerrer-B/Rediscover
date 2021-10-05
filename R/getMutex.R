@@ -61,6 +61,7 @@
 #' @importFrom PoissonBinomial ppbinom
 #' @importFrom ShiftConvolvePoibin ppoisbin
 #' @importFrom matrixStats rowProds
+#' @importFrom stats rnorm
 #' @export
 
 getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE, 

@@ -240,32 +240,54 @@ mismutex <- getMutexAB(A=A_Matrix, PM=PMA, B=B_Matrix, PMB = PMB)
 
 ```
 
-Finally, the next code chunk shows an example of how to apply this function to a real case. Specifically, information available in The Cancer Genome Atlas Program (TCGA) on colon adenocarcinoma (COAD) has been used. In this case, the `TCGA_COAD_AMP` matrix correspond to the most 1000 mutated genes, and the extra matrix `AMP_COAD` provides information about the amplifications over 1000 genes. The example run `getMutexAB` with the default parameters.
+Finally, the next code chunk shows an example of how to apply this function to a real case. Specifically, information available in The Cancer Genome Atlas Program (TCGA) on colon adenocarcinoma (COAD) has been used. In this case, the `TCGA_COAD_AMP` matrix correspond to the most 1000 mutated genes, and the extra matrix `AMP_COAD` provides information about the amplifications over 100 genes. The example run `getMutexAB` with the default parameters. The code, also explains how to merge different datasets.
 
 ```{r getMutexAB_COAD, eval=TRUE}
 
-data("TCGA_COAD_AMP")
+data("TCGA_COAD")
+data("PM_COAD")
 data("AMP_COAD")
-data("PM_TCGA_COAD_AMP")
 data("PM_AMP_COAD")
 
-mismutex <- getMutexAB(A=TCGA_COAD_AMP, PMA=PM_TCGA_COAD_AMP, 
-                       B=AMP_COAD, PMB = PM_AMP_COAD)
+common <- intersect(colnames(TCGA_COAD), colnames(AMP_COAD))
+
+keep <- match(common,colnames(TCGA_COAD))
+TCGA_COAD_100 <- TCGA_COAD[1:100,keep]
+PM_TCGA_COAD_100 <- PM_COAD[1:100,keep]
+
+keep <- match(common,colnames(AMP_COAD))
+AMP_COAD_100 <- AMP_COAD[1:100,keep]
+PM_AMP_COAD_100 <- PM_AMP_COAD[1:100,keep]
+
+mismutex <- getMutexAB(A=TCGA_COAD_100, PMA=PM_TCGA_COAD_100, 
+                       B=AMP_COAD_100, PMB = PM_AMP_COAD_100)
+
 
 ```
 
 
-In the previous example, TCGA_COAD_AMP and AMP_COAD share the same number of rown, but this is not needed. The following code chunk show the sample analysis but with the 100 most mutated genes and 50 amplificated genes.
+In the previous example, TCGA_COAD_AMP and AMP_COAD share the same number of rown, but this is not needed. The following code chunk show the sample analysis but with the 100 most mutated genes and 150 amplificated genes.
 
 ```{r getMutexAB_COAD_2, eval=TRUE}
 
-data("TCGA_COAD_AMP")
+data("TCGA_COAD")
+data("PM_COAD")
 data("AMP_COAD")
-data("PM_TCGA_COAD_AMP")
 data("PM_AMP_COAD")
 
-mismutex <- getMutexAB(A=TCGA_COAD_AMP[1:100,], PMA=PM_TCGA_COAD_AMP[1:100,], 
-                       B=AMP_COAD[1:50,], PMB = PM_AMP_COAD[1:50,])
+common <- intersect(colnames(TCGA_COAD), colnames(AMP_COAD))
+
+keep <- match(common,colnames(TCGA_COAD))
+TCGA_COAD_100 <- TCGA_COAD[1:100,keep]
+PM_TCGA_COAD_100 <- PM_COAD[1:100,keep]
+
+keep <- match(common,colnames(AMP_COAD))
+AMP_COAD_150 <- AMP_COAD[1:150,keep]
+PM_AMP_COAD_150 <- PM_AMP_COAD[1:150,keep]
+
+mismutex <- getMutexAB(A=TCGA_COAD_100, PMA=PM_TCGA_COAD_100, 
+                       B=AMP_COAD_150, PMB = PM_AMP_COAD_150)
+
 
 ```
 

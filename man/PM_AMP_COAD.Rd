@@ -3,7 +3,7 @@
 \docType{data}
 \title{PM_AMP_COAD data}
 \description{
-Probability matrix, with information of amplifications being mutated in samples in Colon Adenocarcinoma, created by AMP_COAD.rda applying \code{getPM} and used as real example and \code{getMutexAB}.
+Probability matrix, with information of genes being amplified in samples in Colon Adenocarcinoma, created by AMP_COAD.rda applying \code{getPM} and used as real example and \code{getMutexAB}.
 }
 \usage{data("PM_AMP_COAD")}
 \format{
