@@ -61,17 +61,9 @@ we  implemented three different approximations of the Poison-Binomial distributi
   selecting the option `parallel` (by default FALSE) and setting the number of cores (`no_cores` parameter)
 }
 \examples{
+
+  \donttest{   
   
-  #This first example is a basic 
-  #example of how to perform getMutexAB. 
-  
-  data("A_example")
-  data("B_example")
-  PMA <- getPM(A_example)
-  PMB <- getPM(B_example)
-  mismutex <- getMutexAB(A=A_example, PM=PMA, B=B_example, PMB = PMB)
-  
-  \donttest{
   #The next example, is the same as the first
   # one but, using a matrix of class Matrix. 
   
