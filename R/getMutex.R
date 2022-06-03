@@ -438,8 +438,8 @@ getMutex <- function(A = NULL, PM = getPM(A), lower.tail = TRUE,
           miniPM <- as.matrix(PM[match(levels(genes_factor),PM@rowExps),])
           llx <- combn(nrow(miniPM),2)
           llx <- cbind(llx,rbind(c(1:nrow(miniPM)),c(1:nrow(miniPM))))
-          II_2 <- cbind(which(Idx[,II[,1]] == 1,arr.ind = T)[,1],
-                        which(Idx[,II[,2]] == 1,arr.ind = T)[,1])
+          II_2 <- cbind(which(Idx[,II[,1],drop=FALSE] == 1,arr.ind = T)[,1],
+                        which(Idx[,II[,2],drop=FALSE] == 1,arr.ind = T)[,1])
           pos <- factor(II_2 %*% rnorm(2))
           
           # cat("length_pos=",length(levels(pos)),"\nII_2 = ",nrow(II_2),"\n")
